@@ -16,11 +16,15 @@ export default function AdminDashboard() {
     try {
       // Check if user is admin
       const { data: { user } } = await supabase.auth.getUser()
+      console.log("🔑 Logged in Admin UUID:", user?.id)
+
 
       if (!user?.id) {
         nav('/admin-login')
         return
       }
+
+
 
       const { data: adminProfile } = await supabase
         .from('profiles')
@@ -62,9 +66,13 @@ export default function AdminDashboard() {
     }
   }, [nav])
 
+
+
   useEffect(() => {
     fetchProfiles()
   }, [fetchProfiles])
+
+  
 
   const handleApprove = async (profileId) => {
     try {
