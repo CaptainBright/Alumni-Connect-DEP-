@@ -1,11 +1,10 @@
-// client/src/pages/Register.jsx
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useNavigate, Link } from 'react-router-dom'
+import { ensureProfile, normalizeUserType } from '../lib/authProfile'
 
 export default function Register() {
-  const [userType, setUserType] = useState('') // Student, Alumni, Admin
-  const [step, setStep] = useState(1) // Step 1: Role selection, Step 2: Form
+  const [userType, setUserType] = useState('')
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -18,9 +17,10 @@ export default function Register() {
     role: '',
     agreedToTerms: false
   })
-  const nav = useNavigate()
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState(false)
+  const nav = useNavigate()
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -30,118 +30,152 @@ export default function Register() {
     }))
   }
 
+  const validateCommonFields = () => {
+    if (!formData.fullName.trim()) return 'Full name is required'
+    if (!userType) return 'Please select account type'
+    if (!formData.graduationYear.trim()) return 'Graduation year is required'
+    if (!formData.branch.trim()) return 'Branch is required'
+    if (!formData.agreedToTerms) return 'You must agree to terms and conditions'
+    return null
+  }
+
   const onSubmit = async (e) => {
     e.preventDefault()
     setError(null)
-    
-    if (!formData.fullName.trim()) {
-      setError('Full name is required')
-      return
-    }
-    
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       return
     }
-    
+
     if (formData.password.length < 8) {
       setError('Password must be at least 8 characters')
       return
     }
-    
-    if (!formData.agreedToTerms) {
-      setError('You must agree to terms and conditions')
+
+    const validationError = validateCommonFields()
+    if (validationError) {
+      setError(validationError)
       return
     }
-    
+
     setLoading(true)
 
     try {
-      console.log('Starting registration for:', formData.email)
-      
-      // 1) Create user via Supabase Auth
-      const { user, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email, 
-        password: formData.password
+      const normalizedType = normalizeUserType(userType)
+      const profileDraft = {
+        fullName: formData.fullName.trim(),
+        graduationYear: formData.graduationYear,
+        branch: formData.branch?.trim(),
+        company: formData.company?.trim(),
+        linkedIn: formData.linkedIn?.trim(),
+        role: formData.role?.trim(),
+        userType: normalizedType
+      }
+
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email.trim(),
+        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+          data: {
+            full_name: profileDraft.fullName,
+            graduation_year: profileDraft.graduationYear,
+            branch: profileDraft.branch || null,
+            company: profileDraft.company || null,
+            linkedin: profileDraft.linkedIn || null,
+            role: profileDraft.role || null,
+            user_type: profileDraft.userType
+          }
+        }
       })
 
       if (signUpError) {
-        console.error('SignUp error details:', signUpError)
-        // Check for rate limiting
-        if (signUpError.message?.includes('429') || signUpError.message?.includes('Too Many')) {
-          setError('Too many signup attempts. Please wait 60 seconds and try again with a different email.')
-        } else {
-          setError(`Sign up failed: ${signUpError.message}`)
-        }
-        setLoading(false)
+        setError(signUpError.message)
         return
       }
 
+      const user = signUpData?.user
       if (!user?.id) {
-        setError('Failed to create user account - no ID returned')
-        setLoading(false)
+        setError('User creation failed')
         return
       }
 
-      const userId = user.id
-      console.log('User created successfully with ID:', userId)
+      if (!signUpData?.session) {
+        nav('/login', {
+          state: {
+            info: 'Registration submitted. Verify your email, then wait for admin approval.'
+          }
+        })
+        return
+      }
 
-      // 2) Wait for session to be properly established
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // 3) Sign in immediately to establish session
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password
+      const { error: profileError } = await ensureProfile(user, {
+        ...profileDraft,
+        isApproved: false,
+        approvalStatus: 'PENDING'
       })
 
-      if (signInError) {
-        console.warn('Sign in after signup warning:', signInError)
-        // Continue - profile insert might still work
-      } else {
-        console.log('User auto-signed in after registration')
-      }
-
-      // 4) Verify session exists before inserting profile
-      const { data: { session } } = await supabase.auth.getSession()
-      console.log('Session available:', !!session?.user)
-
-      // 5) Insert profile data (with authenticated session)
-      const profileData = {
-        id: userId,
-        full_name: formData.fullName.trim(),
-        graduation_year: formData.graduationYear ? parseInt(formData.graduationYear) : null,
-        branch: formData.branch?.trim() || null,
-        company: formData.company?.trim() || null,
-        linkedin: formData.linkedIn?.trim() || null,
-        role: formData.role?.trim() || null,
-        created_at: new Date().toISOString()
-      }
-
-      console.log('Inserting profile with data:', profileData)
-
-      const { data: profileResponse, error: insertError } = await supabase
-        .from('profiles')
-        .insert([profileData])
-        .select()
-
-      if (insertError) {
-        console.error('Profile insert error:', insertError)
-        setError(`Failed to create profile: ${insertError.message}. Check Supabase RLS policies.`)
-        setLoading(false)
+      if (profileError) {
+        setError(profileError.message)
         return
       }
 
-      console.log('Profile inserted successfully:', profileResponse)
-
-      // Success - redirect
-      alert('✅ Registration successful! Check Supabase dashboard to verify your profile was created.')
-      nav('/login')
+      await supabase.auth.signOut()
+      nav('/login', {
+        state: {
+          info: 'Registration submitted successfully. Please wait for admin approval before logging in.'
+        }
+      })
     } catch (err) {
-      console.error('Registration error:', err)
       setError(err.message || 'Registration failed')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGoogleSignUp = async () => {
+    const validationError = validateCommonFields()
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
+    setError(null)
+    setOauthLoading(true)
+
+    try {
+      const pendingDraft = {
+        fullName: formData.fullName.trim(),
+        graduationYear: formData.graduationYear,
+        branch: formData.branch?.trim(),
+        company: formData.company?.trim(),
+        linkedIn: formData.linkedIn?.trim(),
+        role: formData.role?.trim(),
+        userType: normalizeUserType(userType)
+      }
+
+      window.localStorage.setItem('pending_user_type', pendingDraft.userType)
+      window.localStorage.setItem('pending_profile_draft', JSON.stringify(pendingDraft))
+
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard&flow=register`
+        }
+      })
+
+      if (oauthError) {
+        window.localStorage.removeItem('pending_user_type')
+        window.localStorage.removeItem('pending_profile_draft')
+        setError(oauthError.message)
+        setOauthLoading(false)
+      }
+    } catch (err) {
+      window.localStorage.removeItem('pending_user_type')
+      window.localStorage.removeItem('pending_profile_draft')
+      setError(err.message || 'Google sign-up failed')
+      setOauthLoading(false)
     }
   }
 
@@ -152,155 +186,172 @@ export default function Register() {
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Join the Community</h2>
             <p className="text-gray-600">Create your account to connect with alumni worldwide</p>
+            <p className="text-sm text-amber-700 mt-1">After registration, your profile goes to admin for approval.</p>
           </div>
-          
-          {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
-          
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={onSubmit} className="space-y-5">
             <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Account Type *
+              </label>
+              <select
+                required
+                value={userType}
+                onChange={(e) => setUserType(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
+              >
+                <option value="">Select account type</option>
+                <option value="student">Student</option>
+                <option value="alumni">Alumni</option>
+              </select>
+            </div>
+
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
-              <input 
+              <input
                 type="text"
                 name="fullName"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:border-transparent" 
-                placeholder="First and last name" 
-                value={formData.fullName} 
+                value={formData.fullName}
                 onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
-              <input 
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+              <input
                 type="email"
                 name="email"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:border-transparent" 
-                placeholder="you@example.com" 
-                value={formData.email} 
+                value={formData.email}
                 onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
               />
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Graduation Year (Optional)</label>
-                <select 
-                  name="graduationYear"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:border-transparent"
-                  value={formData.graduationYear}
-                  onChange={handleChange}
-                >
-                  <option value="">Select year...</option>
-                  {Array.from({ length: 60 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Branch / Field (Optional)</label>
-                <input 
-                  type="text"
-                  name="branch"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:border-transparent" 
-                  placeholder="e.g., Engineering, MBA, Arts" 
-                  value={formData.branch} 
-                  onChange={handleChange}
-                />
-              </div>
+              <input
+                type="text"
+                name="graduationYear"
+                placeholder="Graduation year"
+                value={formData.graduationYear}
+                onChange={handleChange}
+                className="px-4 py-2 border rounded-lg"
+              />
+
+              <input
+                type="text"
+                name="branch"
+                placeholder="Branch"
+                value={formData.branch}
+                onChange={handleChange}
+                className="px-4 py-2 border rounded-lg"
+              />
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Company (Optional)</label>
-                <input 
-                  type="text"
-                  name="company"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:border-transparent" 
-                  placeholder="Your company" 
-                  value={formData.company} 
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Role / Position (Optional)</label>
-                <input 
-                  type="text"
-                  name="role"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:border-transparent" 
-                  placeholder="e.g., Product Manager" 
-                  value={formData.role} 
-                  onChange={handleChange}
-                />
-              </div>
+              <input
+                type="text"
+                name="company"
+                placeholder="Company"
+                value={formData.company}
+                onChange={handleChange}
+                className="px-4 py-2 border rounded-lg"
+              />
+
+              <input
+                type="text"
+                name="role"
+                placeholder="Role"
+                value={formData.role}
+                onChange={handleChange}
+                className="px-4 py-2 border rounded-lg"
+              />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">LinkedIn Profile (Optional)</label>
-              <input 
+              <input
                 type="url"
                 name="linkedIn"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:border-transparent" 
-                placeholder="https://linkedin.com/in/yourprofile" 
-                value={formData.linkedIn} 
+                placeholder="LinkedIn URL"
+                value={formData.linkedIn}
                 onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg"
               />
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
-                <input 
-                  type="password"
-                  name="password"
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:border-transparent" 
-                  placeholder="Min 8 characters" 
-                  value={formData.password} 
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password *</label>
-                <input 
-                  type="password"
-                  name="confirmPassword"
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:border-transparent" 
-                  placeholder="Re-enter password" 
-                  value={formData.confirmPassword} 
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            
-            <label className="flex items-start gap-2">
-              <input 
-                type="checkbox" 
-                name="agreedToTerms"
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
                 required
-                className="w-4 h-4 rounded mt-1" 
+                value={formData.password}
+                onChange={handleChange}
+                className="px-4 py-2 border rounded-lg"
+              />
+
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="px-4 py-2 border rounded-lg"
+              />
+            </div>
+
+            <label className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                name="agreedToTerms"
                 checked={formData.agreedToTerms}
                 onChange={handleChange}
               />
-              <span className="text-sm text-gray-700">I agree to the Terms of Service and Privacy Policy</span>
+              <span className="text-sm text-gray-700">
+                I agree to the Terms and Privacy Policy
+              </span>
             </label>
-            
-            <button 
-              type="submit" 
-              disabled={loading}
+
+            <button
+              type="submit"
+              disabled={loading || oauthLoading}
               className="w-full py-2.5 bg-[var(--cardinal)] text-white font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 transition"
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
-          
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px bg-gray-200 flex-1" />
+            <span className="text-xs text-gray-500 uppercase tracking-wide">or</span>
+            <div className="h-px bg-gray-200 flex-1" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignUp}
+            disabled={loading || oauthLoading}
+            className="w-full py-2.5 border border-gray-300 bg-white text-gray-800 font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            {oauthLoading ? 'Redirecting to Google...' : 'Sign up with Google'}
+          </button>
+
           <div className="mt-6 text-center">
-            <p className="text-gray-600 text-sm">Already have an account? <Link to="/login" className="text-[var(--cardinal)] font-semibold hover:underline">Sign in</Link></p>
+            <p className="text-gray-600 text-sm">
+              Already have an account?{' '}
+              <Link to="/login" className="text-[var(--cardinal)] font-semibold hover:underline">
+                Sign in
+              </Link>
+            </p>
           </div>
         </div>
       </div>
