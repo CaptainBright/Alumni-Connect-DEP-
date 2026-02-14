@@ -40,39 +40,68 @@ Verify the new columns in **Database → Tables → profiles**:
 
 ## ✅ Step 2: Update RLS Policies
 
-Delete the old policies and create new ones:
+> ⚠️ Important: avoid self-referencing `profiles` subqueries directly inside `profiles` policies (that can trigger `500` errors such as `infinite recursion detected in policy`).
+
+Delete old policies and create these safe ones:
 
 ```sql
 -- Drop old policies
 DROP POLICY IF EXISTS "allow_viewing_alumni_profiles_only" ON public.profiles;
 DROP POLICY IF EXISTS "public_select_profiles" ON public.profiles;
+DROP POLICY IF EXISTS "view_approved_profiles" ON public.profiles;
+DROP POLICY IF EXISTS "admin_view_all_profiles" ON public.profiles;
 DROP POLICY IF EXISTS "insert_own_profile" ON public.profiles;
 DROP POLICY IF EXISTS "update_own_profile" ON public.profiles;
+DROP POLICY IF EXISTS "admin_update_profiles" ON public.profiles;
 DROP POLICY IF EXISTS "delete_own_profile" ON public.profiles;
 
--- 1. Allow anyone to view approved profiles
-CREATE POLICY "view_approved_profiles" ON public.profiles
-FOR SELECT USING (approval_status = 'APPROVED' OR auth.uid() = id);
+-- Helper function for admin checks (SECURITY DEFINER prevents RLS recursion)
+CREATE OR REPLACE FUNCTION public.is_admin_user()
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.profiles p
+    WHERE p.id = auth.uid()
+      AND lower(coalesce(p.user_type, '')) = 'admin'
+      AND (p.approval_status = 'APPROVED' OR p.is_approved = true)
+  );
+$$;
 
--- 2. Allow admins to view all profiles
-CREATE POLICY "admin_view_all_profiles" ON public.profiles
-FOR SELECT USING (user_type = 'Admin' AND auth.uid() = id);
+REVOKE ALL ON FUNCTION public.is_admin_user() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_admin_user() TO authenticated;
 
--- 3. Allow new users to insert their own profile
+-- 1) Users can read their own profile
+CREATE POLICY "select_own_profile" ON public.profiles
+FOR SELECT USING (auth.uid() = id);
+
+-- 2) Anyone can read approved profiles
+CREATE POLICY "select_approved_profiles" ON public.profiles
+FOR SELECT USING (approval_status = 'APPROVED');
+
+-- 3) Admin can read all profiles
+CREATE POLICY "admin_select_all_profiles" ON public.profiles
+FOR SELECT USING (public.is_admin_user());
+
+-- 4) New users can insert only their own profile
 CREATE POLICY "insert_own_profile" ON public.profiles
 FOR INSERT WITH CHECK (auth.uid() = id);
 
--- 4. Allow users to update their own profile
+-- 5) Users can update their own profile fields
 CREATE POLICY "update_own_profile" ON public.profiles
-FOR UPDATE USING (auth.uid() = id);
+FOR UPDATE USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);
 
--- 5. Allow admins to update approval status
+-- 6) Admin can update approval fields for any profile
 CREATE POLICY "admin_update_profiles" ON public.profiles
-FOR UPDATE USING (
-  (SELECT user_type FROM public.profiles WHERE id = auth.uid())::text = 'Admin'
-);
+FOR UPDATE USING (public.is_admin_user())
+WITH CHECK (public.is_admin_user());
 
--- 6. Allow users to delete their own profile
+-- 7) Users can delete their own profile
 CREATE POLICY "delete_own_profile" ON public.profiles
 FOR DELETE USING (auth.uid() = id);
 ```
