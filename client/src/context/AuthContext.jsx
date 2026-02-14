@@ -1,32 +1,94 @@
 // client/src/context/AuthContext.jsx
-import React, { createContext, useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-
-export const AuthContext = createContext(null)
+import { AuthContext } from './auth-context'
 
 export function AuthProvider({ children }) {
+  const [session, setSession] = useState(null)
   const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [authStatus, setAuthStatus] = useState("guest") 
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const session = supabase.auth.session()
-    setUser(session?.user ?? null)
-    setLoading(false)
+  // 🔥 Fetch profile and decide role
+  const evaluateUser = async (session) => {
+    if (!session?.user) {
+      setAuthStatus("guest")
+      setProfile(null)
+      return
+    }
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("user_type, approval_status")
+      .eq("id", session.user.id)
+      .single()
+
+    if (error || !data) {
+      setAuthStatus("guest")
+      return
+    }
+
+    setProfile(data)
+
+    if (data.approval_status !== "APPROVED") {
+      setAuthStatus("pending")
+    } else if (data.user_type === "Admin") {
+      setAuthStatus("admin")
+    } else {
+      setAuthStatus("approved")
+    }
+  }
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadSession = async () => {
+      const { data } = await supabase.auth.getSession()
+      if (!mounted) return
+
+      const currentSession = data.session || null
+      setSession(currentSession)
+      setUser(currentSession?.user || null)
+
+      await evaluateUser(currentSession)
+      setLoading(false)
+    }
+
+    loadSession()
+
+    const { data } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+      setSession(nextSession || null)
+      setUser(nextSession?.user || null)
+      await evaluateUser(nextSession)
     })
 
     return () => {
-      listener?.unsubscribe()
+      mounted = false
+      data.subscription?.unsubscribe()
     }
   }, [])
 
-  const signIn = (opts) => supabase.auth.signIn(opts)
-  const signOut = () => supabase.auth.signOut()
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    setAuthStatus("guest")
+    setProfile(null)
+  }
+
+  const value = useMemo(
+    () => ({
+      session,
+      user,
+      profile,
+      authStatus,   // ⭐ main thing your app will use
+      loading,
+      signOut
+    }),
+    [session, user, profile, authStatus, loading]
+  )
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )
