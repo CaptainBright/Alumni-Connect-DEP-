@@ -1,7 +1,24 @@
 // client/src/pages/AdminLogin.jsx
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { isAdminProfile, isProfileApproved } from '../lib/authProfile'
 import { useNavigate, Link } from 'react-router-dom'
+
+
+function getProfileFetchErrorMessage(profileError) {
+  const rawMessage = profileError?.message || ''
+  const normalized = rawMessage.toLowerCase()
+
+  if (
+    profileError?.code === '42P17' ||
+    normalized.includes('infinite recursion') ||
+    profileError?.status === 500
+  ) {
+    return 'Failed to fetch profile (Supabase RLS policy error). Please run the RLS fixes in docs/ROLE_BASED_AUTH_SETUP.md.'
+  }
+
+  return `Failed to fetch profile${rawMessage ? `: ${rawMessage}` : ''}`
+}
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -37,17 +54,17 @@ export default function AdminLogin() {
       // Check if user is Admin
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('user_type, approval_status')
+        .select('user_type, approval_status, is_approved')
         .eq('id', user.id)
         .single()
 
       if (profileError) {
-        setError('Failed to fetch profile')
+        setError(getProfileFetchErrorMessage(profileError))
         setLoading(false)
         return
       }
 
-      if (profile.user_type !== 'Admin') {
+      if (!isAdminProfile(profile)) {
         setError('❌ Admin access denied. This account is not registered as an admin.')
         
         // Sign out non-admin user
@@ -56,7 +73,7 @@ export default function AdminLogin() {
         return
       }
 
-      if (profile.approval_status !== 'APPROVED') {
+      if (!isProfileApproved(profile)) {
         setError('❌ Admin account pending approval. Contact super admin.')
         await supabase.auth.signOut()
         setLoading(false)
