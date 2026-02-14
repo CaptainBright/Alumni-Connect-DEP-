@@ -22,3 +22,7 @@ export const supabase = createClient(
     }
   }
 )
+// DEBUG ONLY
+if (typeof window !== "undefined") {
+  window.supabase = supabase
+}
