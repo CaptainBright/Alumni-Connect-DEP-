@@ -1,5 +1,5 @@
 // client/src/pages/AdminDashboard.jsx
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useNavigate } from 'react-router-dom'
 
@@ -12,15 +12,11 @@ export default function AdminDashboard() {
   const [adminNotes, setAdminNotes] = useState({})
   const nav = useNavigate()
 
-  useEffect(() => {
-    fetchProfiles()
-  }, [])
-
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
     try {
       // Check if user is admin
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user?.id) {
         nav('/admin-login')
         return
@@ -64,7 +60,11 @@ export default function AdminDashboard() {
       console.error('Error fetching profiles:', err)
       setLoading(false)
     }
-  }
+  }, [nav])
+
+  useEffect(() => {
+    fetchProfiles()
+  }, [fetchProfiles])
 
   const handleApprove = async (profileId) => {
     try {

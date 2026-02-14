@@ -1,6 +1,5 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
 
 export default function Navbar(){
@@ -15,12 +14,7 @@ export default function Navbar(){
   const isApproved = authStatus === "approved" || authStatus === "admin"
 
   return (
-    <motion.header
-      className="site-nav sticky top-0 z-50 border-b border-transparent"
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.45 }}
-    >
+    <header className="site-nav sticky top-0 z-50 border-b border-transparent">
       <div className="max-w-7xl mx-auto flex items-stretch">
 
         {/* Logo */}
@@ -56,9 +50,7 @@ export default function Navbar(){
             {/* PENDING */}
             {authStatus === "pending" && (
               <>
-                <Link to="/pending" className="text-yellow-300 font-medium">
-                  Awaiting Approval
-                </Link>
+                <span className="text-yellow-300 font-medium">Awaiting Approval</span>
                 <button
                   onClick={handleLogout}
                   className="px-3 py-1 rounded-full border border-white"
@@ -100,6 +92,6 @@ export default function Navbar(){
           </div>
         </div>
       </div>
-    </motion.header>
+    </header>
   )
 }

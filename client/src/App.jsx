@@ -14,7 +14,6 @@ import Dashboard from './pages/Dashboard'
 import AuthCallback from './pages/AuthCallback'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
-import PendingApproval from './pages/PendingApproval'
 
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -32,14 +31,6 @@ export default function App(){
           <Route path="/register" element={<Register/>}/>
           <Route path="/auth/callback" element={<AuthCallback/>}/>
           <Route path="/admin-login" element={<AdminLogin/>}/>
-
-          {/* PENDING USERS PAGE */}
-          <Route
-            element={<ProtectedRoute allow={["pending","approved","admin"]} />}
-          >
-            <Route path="/pending" element={<PendingApproval/>}/>
-          </Route>
-
           {/* APPROVED USERS ONLY */}
           <Route
             element={<ProtectedRoute allow={["approved","admin"]} />}
