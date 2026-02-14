@@ -6,7 +6,7 @@ export default function ProtectedRoute({
   children,
   allow = ["approved", "admin"],   // which roles can access this route
   redirectGuest = "/login",
-  redirectPending = "/pending"
+  redirectPending = "/"
 }) {
   const { authStatus, loading } = useAuth()
 

@@ -209,6 +209,7 @@ export default function Register() {
                 <option value="">Select account type</option>
                 <option value="student">Student</option>
                 <option value="alumni">Alumni</option>
+                <option value="faculty">Faculty</option>
               </select>
             </div>
 

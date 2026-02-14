@@ -1,17 +1,11 @@
 // client/src/components/AlumniCard.jsx
 import React from "react";
-import { motion } from "framer-motion";
-import { cardHover } from "../utils/anim";
 
 export default function AlumniCard({ alumni }) {
   // alumni: { full_name, avatar_url, role, company, branch, graduation_year, created_at, linkedin }
   return (
-    <motion.article
-      className="bg-white rounded-2xl p-4 shadow-soft-lg border overflow-hidden"
-      initial="rest"
-      whileHover="hover"
-      animate="rest"
-      variants={cardHover}
+    <article
+      className="bg-white rounded-2xl p-4 shadow-soft-lg border overflow-hidden transition-transform duration-200 hover:-translate-y-0.5"
       style={{ borderColor: "rgba(11,11,13,0.04)" }}
     >
       <div className="flex items-center gap-4">
@@ -47,6 +41,6 @@ export default function AlumniCard({ alumni }) {
           {alumni?.created_at ? new Date(alumni.created_at).toLocaleDateString() : ""}
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 }

@@ -4,6 +4,7 @@ export function normalizeUserType(value) {
   const normalized = (value || '').toString().trim().toLowerCase()
 
   if (normalized === 'admin') return 'Admin'
+  if (normalized === 'faculty') return 'Faculty'
   if (normalized === 'student') return 'Student'
   return 'Alumni'
 }
