@@ -22,7 +22,7 @@ export default function Directory(){
   async function fetchProfiles(){
     try {
       let qb = supabase
-        .from('profiles')
+        .from('alumni_directory')
         .select('*', { count: 'exact' })
 
       // Text search across name/company/branch (ilike)
