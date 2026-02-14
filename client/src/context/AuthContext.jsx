@@ -1,6 +1,7 @@
 // client/src/context/AuthContext.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { isAdminProfile, isProfileApproved } from '../lib/authProfile'
 import { AuthContext } from './auth-context'
 
 export function AuthProvider({ children }) {
@@ -20,7 +21,7 @@ export function AuthProvider({ children }) {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("user_type, approval_status")
+      .select("user_type, approval_status, is_approved")
       .eq("id", session.user.id)
       .single()
 
@@ -31,9 +32,9 @@ export function AuthProvider({ children }) {
 
     setProfile(data)
 
-    if (data.approval_status !== "APPROVED") {
+    if (!isProfileApproved(data)) {
       setAuthStatus("pending")
-    } else if (data.user_type === "Admin") {
+    } else if (isAdminProfile(data)) {
       setAuthStatus("admin")
     } else {
       setAuthStatus("approved")

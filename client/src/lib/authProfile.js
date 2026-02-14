@@ -9,6 +9,14 @@ export function normalizeUserType(value) {
   return 'Alumni'
 }
 
+export function normalizeApprovalStatus(value) {
+  const normalized = (value || '').toString().trim().toUpperCase()
+
+  if (normalized === 'APPROVED') return 'APPROVED'
+  if (normalized === 'REJECTED') return 'REJECTED'
+  return 'PENDING'
+}
+
 function buildProfileRow(user, overrides = {}) {
   const metadata = user?.user_metadata || {}
   const userType = normalizeUserType(
@@ -56,7 +64,15 @@ export async function getProfileByUserId(userId) {
 
 export function isProfileApproved(profile) {
   if (!profile) return false
-  return profile.approval_status === 'APPROVED' || profile.is_approved === true
+  return (
+    normalizeApprovalStatus(profile.approval_status) === 'APPROVED' ||
+    profile.is_approved === true
+  )
+}
+
+export function isAdminProfile(profile) {
+  if (!profile) return false
+  return normalizeUserType(profile.user_type) === 'Admin'
 }
 
 export async function ensureProfile(user, overrides = {}) {
