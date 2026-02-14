@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabaseClient"
 export default function PendingApproval() {
   const { user, signOut } = useAuth()
   const [checking, setChecking] = useState(false)
-  const [message, setMessage] = useState("Your account is awaiting admin approval.")
+  const message = "Your account is awaiting admin approval."
 
   // 🔁 periodically check approval
   useEffect(() => {

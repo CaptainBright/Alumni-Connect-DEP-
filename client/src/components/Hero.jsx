@@ -1,5 +1,4 @@
 import React from 'react'
-import { motion } from 'framer-motion'
 
 export default function Hero(){
   return (
@@ -10,21 +9,13 @@ export default function Hero(){
         <div className="absolute inset-0 hero-overlay" />
         <div className="absolute inset-0 flex items-center">
           <div className="max-w-6xl mx-auto px-6 md:px-10 text-center lg:text-left">
-            <motion.h1 className="hero-title text-white text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
+            <h1 className="hero-title text-white text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold">
               Welcome Home
-            </motion.h1>
+            </h1>
 
-            <motion.p className="mt-6 text-white text-base sm:text-lg md:text-xl max-w-3xl mx-auto lg:mx-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.15, duration: 0.6 }}
-            >
+            <p className="mt-6 text-white text-base sm:text-lg md:text-xl max-w-3xl mx-auto lg:mx-0">
               Step into the virtual home of our global alumni community — reconnect with classmates, discover opportunities, and stay up-to-date on campus events and research.
-            </motion.p>
+            </p>
 
             <div className="mt-8 flex justify-center lg:justify-start gap-3">
               <a href="/directory" className="px-5 py-3 text-sm rounded-md cardinal-cta shadow-sm">Find Alumni</a>
