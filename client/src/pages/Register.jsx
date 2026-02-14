@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useNavigate, Link } from 'react-router-dom'
-import { ensureProfile, normalizeUserType } from '../lib/authProfile'
+import { normalizeUserType } from '../lib/authProfile'
+
 
 export default function Register() {
   const [userType, setUserType] = useState('')
@@ -40,99 +41,67 @@ export default function Register() {
   }
 
   const onSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
+  e.preventDefault()
+  setError(null)
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters')
-      return
-    }
-
-    const validationError = validateCommonFields()
-    if (validationError) {
-      setError(validationError)
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      const normalizedType = normalizeUserType(userType)
-      const profileDraft = {
-        fullName: formData.fullName.trim(),
-        graduationYear: formData.graduationYear,
-        branch: formData.branch?.trim(),
-        company: formData.company?.trim(),
-        linkedIn: formData.linkedIn?.trim(),
-        role: formData.role?.trim(),
-        userType: normalizedType
-      }
-
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email.trim(),
-        password: formData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-          data: {
-            full_name: profileDraft.fullName,
-            graduation_year: profileDraft.graduationYear,
-            branch: profileDraft.branch || null,
-            company: profileDraft.company || null,
-            linkedin: profileDraft.linkedIn || null,
-            role: profileDraft.role || null,
-            user_type: profileDraft.userType
-          }
-        }
-      })
-
-      if (signUpError) {
-        setError(signUpError.message)
-        return
-      }
-
-      const user = signUpData?.user
-      if (!user?.id) {
-        setError('User creation failed')
-        return
-      }
-
-      if (!signUpData?.session) {
-        nav('/login', {
-          state: {
-            info: 'Registration submitted. Verify your email, then wait for admin approval.'
-          }
-        })
-        return
-      }
-
-      const { error: profileError } = await ensureProfile(user, {
-        ...profileDraft,
-        isApproved: false,
-        approvalStatus: 'PENDING'
-      })
-
-      if (profileError) {
-        setError(profileError.message)
-        return
-      }
-
-      await supabase.auth.signOut()
-      nav('/login', {
-        state: {
-          info: 'Registration submitted successfully. Please wait for admin approval before logging in.'
-        }
-      })
-    } catch (err) {
-      setError(err.message || 'Registration failed')
-    } finally {
-      setLoading(false)
-    }
+  if (formData.password !== formData.confirmPassword) {
+    setError('Passwords do not match')
+    return
   }
+
+  if (formData.password.length < 8) {
+    setError('Password must be at least 8 characters')
+    return
+  }
+
+  const validationError = validateCommonFields()
+  if (validationError) {
+    setError(validationError)
+    return
+  }
+
+  setLoading(true)
+
+  try {
+    const normalizedType = normalizeUserType(userType)
+
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: formData.email.trim(),
+      password: formData.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        data: {
+          full_name: formData.fullName.trim(),
+          graduation_year: formData.graduationYear
+          ? parseInt(formData.graduationYear)
+          : null,
+
+          branch: formData.branch?.trim() || null,
+          company: formData.company?.trim() || null,
+          linkedin: formData.linkedIn?.trim() || null,
+          role: formData.role?.trim() || null,
+          user_type: normalizedType
+        }
+      }
+    })
+
+    if (signUpError) {
+      setError(signUpError.message)
+      return
+    }
+
+    nav('/login', {
+      state: {
+        info: 'Registration submitted. Verify your email, then wait for admin approval.'
+      }
+    })
+
+  } catch (err) {
+    setError(err.message || 'Registration failed')
+  } finally {
+    setLoading(false)
+  }
+}
 
   const handleGoogleSignUp = async () => {
     const validationError = validateCommonFields()
