@@ -22,6 +22,40 @@ export const supabase = createClient(
     }
   }
 )
+
+// Setup cross-tab session sync using BroadcastChannel API
+if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+  try {
+    const channel = new BroadcastChannel('supabase-auth')
+    
+    // Send auth state changes to other tabs
+    supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('🔔 Auth state change (broadcasting to other tabs):', _event)
+      channel.postMessage({
+        type: 'AUTH_STATE_CHANGE',
+        event: _event,
+        session: session
+      })
+    })
+    
+    // Listen for auth state changes from other tabs
+    channel.onmessage = (msg) => {
+      const { type, event, session } = msg.data
+      if (type === 'AUTH_STATE_CHANGE') {
+        console.log('📢 Received auth state change from another tab:', event)
+        // Auth changes automatically trigger onAuthStateChange in this tab
+      }
+    }
+    
+    console.log('📡 Cross-tab sync enabled via BroadcastChannel')
+  } catch (err) {
+    console.warn('⚠️ BroadcastChannel not available, cross-tab sync disabled:', err.message)
+  }
+} else if (typeof window !== 'undefined') {
+  // Fallback for browsers that don't support BroadcastChannel
+  console.warn('⚠️ BroadcastChannel not supported in this browser, cross-tab session sync limited')
+}
+
 // DEBUG ONLY
 if (typeof window !== "undefined") {
   window.supabase = supabase

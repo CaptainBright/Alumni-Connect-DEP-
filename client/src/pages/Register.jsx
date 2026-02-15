@@ -1,7 +1,25 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { normalizeUserType } from '../lib/authProfile'
-import axios from 'axios'
+import { sendRegisterOtp, verifyRegisterOtp } from '../api/authApi'
+
+const roleCards = [
+  {
+    value: 'student',
+    title: 'Student',
+    description: 'Current IIT Ropar student account'
+  },
+  {
+    value: 'alumni',
+    title: 'Alumni',
+    description: 'Graduated alumni account'
+  },
+  {
+    value: 'admin',
+    title: 'Admin',
+    description: 'Portal management account'
+  }
+]
 
 export default function Register() {
   const [userType, setUserType] = useState('')
@@ -25,11 +43,7 @@ export default function Register() {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  // Temporary: we don't need oauthLoading if we aren't using google flow or if we keep it separate
-  const [oauthLoading, setOauthLoading] = useState(false)
-
   const nav = useNavigate()
-  const API_URL = 'http://localhost:5001/api/auth'
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -42,8 +56,9 @@ export default function Register() {
   const validateCommonFields = () => {
     if (!formData.fullName.trim()) return 'Full name is required'
     if (!userType) return 'Please select account type'
-    if (!formData.graduationYear.trim()) return 'Graduation year is required'
-    if (!formData.branch.trim()) return 'Branch is required'
+    if (!formData.email.trim()) return 'Email is required'
+    if (userType !== 'admin' && !formData.graduationYear.trim()) return 'Graduation year is required'
+    if (userType !== 'admin' && !formData.branch.trim()) return 'Branch is required'
     if (!formData.agreedToTerms) return 'You must agree to terms and conditions'
     return null
   }
@@ -73,9 +88,7 @@ export default function Register() {
 
     try {
       // Call backend to send OTP
-      const response = await axios.post(`${API_URL}/send-register-otp`, {
-        email: formData.email.trim()
-      })
+      await sendRegisterOtp(formData.email)
 
       setOtpSent(true)
       // Optional: show success message?
@@ -110,14 +123,22 @@ export default function Register() {
         }
       }
 
-      const response = await axios.post(`${API_URL}/verify-register-otp`, payload)
+      await verifyRegisterOtp(payload)
 
       // Success
-      nav('/login', {
-        state: {
-          info: 'Account created successfully! Please login.'
-        }
-      })
+      if (normalizedType === 'Admin') {
+        nav('/admin-login', {
+          state: {
+            info: 'Admin account created successfully. Please login.'
+          }
+        })
+      } else {
+        nav('/login', {
+          state: {
+            info: 'Account created successfully. Your profile is pending admin approval.'
+          }
+        })
+      }
 
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Verification failed')
@@ -125,16 +146,6 @@ export default function Register() {
       setLoading(false)
     }
   }
-
-  // Keep Google Sign In separate (still uses Supabase direct) or remove if user wants ONLY nodemailer
-  // User asked for "otp verification for a new user from nodemailer", usually implies email signup replacement.
-  // I will keep Google as an alternative unless asked to remove.
-
-  // NOTE: Previous implementation had handleGoogleSignUp. I'll include a placeholder or simplified version if needed, 
-  // but for simplicity/focus on request, I'll comment it out or leave it separate. If user wants to replace EVERYTHING, maybe they meant google too? 
-  // "even while registering a new user we're doing a direct verification using supabase auth verification change it to nodemailer too"
-  // This implies Email Signup. Google signup doesn't use email verification in the same way (it's verified by Google). 
-  // So I will leave Google logic as is or just focus on the form.
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-blue-50 px-4 py-8">
@@ -158,17 +169,24 @@ export default function Register() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Account Type *
                 </label>
-                <select
-                  required
-                  value={userType}
-                  onChange={(e) => setUserType(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
-                >
-                  <option value="">Select account type</option>
-                  <option value="student">Student</option>
-                  <option value="alumni">Alumni</option>
-                  <option value="faculty">Faculty</option>
-                </select>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {roleCards.map((role) => (
+                    <button
+                      type="button"
+                      key={role.value}
+                      onClick={() => setUserType(role.value)}
+                      className={`text-left rounded-lg border p-3 transition ${
+                        userType === role.value
+                          ? 'border-[var(--cardinal)] bg-red-50'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <img src="/hero.jpg" alt={role.title} className="w-full h-16 rounded-md object-cover mb-2" />
+                      <p className="font-semibold text-gray-900">{role.title}</p>
+                      <p className="text-xs text-gray-600">{role.description}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
@@ -195,56 +213,60 @@ export default function Register() {
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  name="graduationYear"
-                  placeholder="Graduation year"
-                  value={formData.graduationYear}
-                  onChange={handleChange}
-                  className="px-4 py-2 border rounded-lg"
-                />
+              {userType !== 'admin' && (
+                <>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      name="graduationYear"
+                      placeholder="Graduation year"
+                      value={formData.graduationYear}
+                      onChange={handleChange}
+                      className="px-4 py-2 border rounded-lg"
+                    />
 
-                <input
-                  type="text"
-                  name="branch"
-                  placeholder="Branch"
-                  value={formData.branch}
-                  onChange={handleChange}
-                  className="px-4 py-2 border rounded-lg"
-                />
-              </div>
+                    <input
+                      type="text"
+                      name="branch"
+                      placeholder="Branch"
+                      value={formData.branch}
+                      onChange={handleChange}
+                      className="px-4 py-2 border rounded-lg"
+                    />
+                  </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  name="company"
-                  placeholder="Company"
-                  value={formData.company}
-                  onChange={handleChange}
-                  className="px-4 py-2 border rounded-lg"
-                />
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      name="company"
+                      placeholder="Company"
+                      value={formData.company}
+                      onChange={handleChange}
+                      className="px-4 py-2 border rounded-lg"
+                    />
 
-                <input
-                  type="text"
-                  name="role"
-                  placeholder="Role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="px-4 py-2 border rounded-lg"
-                />
-              </div>
+                    <input
+                      type="text"
+                      name="role"
+                      placeholder="Role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      className="px-4 py-2 border rounded-lg"
+                    />
+                  </div>
 
-              <div>
-                <input
-                  type="url"
-                  name="linkedIn"
-                  placeholder="LinkedIn URL"
-                  value={formData.linkedIn}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg"
-                />
-              </div>
+                  <div>
+                    <input
+                      type="url"
+                      name="linkedIn"
+                      placeholder="LinkedIn URL"
+                      value={formData.linkedIn}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border rounded-lg"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="grid md:grid-cols-2 gap-4">
                 <input
