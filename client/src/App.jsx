@@ -14,10 +14,12 @@ import Dashboard from './pages/Dashboard'
 import AuthCallback from './pages/AuthCallback'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 import ProtectedRoute from './components/ProtectedRoute'
 
-export default function App(){
+export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -26,27 +28,29 @@ export default function App(){
         <Routes>
 
           {/* PUBLIC ROUTES */}
-          <Route path="/" element={<Home/>}/>
-          <Route path="/login" element={<Login/>}/>
-          <Route path="/register" element={<Register/>}/>
-          <Route path="/auth/callback" element={<AuthCallback/>}/>
-          <Route path="/admin-login" element={<AdminLogin/>}/>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
           {/* APPROVED USERS ONLY */}
           <Route
-            element={<ProtectedRoute allow={["approved","admin"]} />}
+            element={<ProtectedRoute allow={["approved", "admin"]} />}
           >
-            <Route path="/dashboard" element={<Dashboard/>}/>
-            <Route path="/directory" element={<Directory/>}/>
-            <Route path="/jobs" element={<Jobs/>}/>
-            <Route path="/resources" element={<Resources/>}/>
-            <Route path="/donation" element={<Donation/>}/>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/directory" element={<Directory />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/donation" element={<Donation />} />
           </Route>
 
           {/* ADMIN ONLY */}
           <Route
             element={<ProtectedRoute allow={["admin"]} />}
           >
-            <Route path="/admin" element={<AdminDashboard/>}/>
+            <Route path="/admin" element={<AdminDashboard />} />
           </Route>
 
         </Routes>

@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { ensureProfile, isProfileApproved } from '../lib/authProfile'
 
-export default function Login(){
+export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
@@ -119,7 +119,12 @@ export default function Login(){
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-sm font-semibold text-gray-700">Password</label>
+                <Link to="/forgot-password" className="text-sm text-[var(--cardinal)] hover:underline font-medium">
+                  Forgot Password?
+                </Link>
+              </div>
               <input
                 type="password"
                 required
