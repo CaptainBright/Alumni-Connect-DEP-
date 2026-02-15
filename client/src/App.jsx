@@ -16,6 +16,7 @@ import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import PendingApproval from './pages/PendingApproval'
 
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -35,6 +36,11 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin-login" element={<AdminLogin />} />
+          <Route
+            element={<ProtectedRoute allow={["pending", "approved", "admin"]} redirectGuest="/login" />}
+          >
+            <Route path="/pending-approval" element={<PendingApproval />} />
+          </Route>
           {/* APPROVED USERS ONLY */}
           <Route
             element={<ProtectedRoute allow={["approved", "admin"]} />}

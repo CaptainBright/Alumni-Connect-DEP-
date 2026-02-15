@@ -1,18 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* brand tokens */
 :root{
-  --cardinal: #8C1515;
-  --sand: #f7f2ef;
+  --cardinal: #8c1515;
+  --sand: #ece9ef;
+  --ink: #0f172a;
+  --nav-start: #111820;
+  --nav-end: #1b2734;
 }
 
 /* body + base */
 html,body,#root{height:100%}
 body {
   @apply bg-[var(--sand)] text-slate-800;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-family: "Outfit", "Segoe UI", Arial, sans-serif;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 }
@@ -26,23 +31,45 @@ body {
 
 /* sticky nav glass */
 .site-nav {
-  background: rgba(18,18,20,0.6);
-  backdrop-filter: blur(6px);
+  background: linear-gradient(90deg, rgba(17, 24, 32, 0.96), rgba(27, 39, 52, 0.96));
+  backdrop-filter: blur(8px);
 }
 
-/* left red stripe logo style (desktop) */
-.brand-block {
-  background: linear-gradient(180deg, var(--cardinal), #6b0f0f);
-  color: white;
+.nav-brand {
+  background: linear-gradient(180deg, #8c1515, #7d1111);
 }
 
 /* subtle overlay for hero */
 .hero-overlay {
-  background: linear-gradient(180deg, rgba(7,7,8,0.55), rgba(7,7,8,0.2));
+  background: linear-gradient(180deg, rgba(5, 12, 24, 0.72), rgba(5, 12, 24, 0.32));
 }
 
 /* smaller utility */
 .cardinal-cta {
   background: var(--cardinal);
   color: white;
+}
+
+@keyframes float-soft {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+.float-soft {
+  animation: float-soft 6s ease-in-out infinite;
+}
+
+.float-soft-delay {
+  animation: float-soft 7.5s ease-in-out infinite;
+  animation-delay: 0.8s;
+}
+
+.fade-up-card {
+  transition: transform 300ms ease, box-shadow 300ms ease;
+}
+
+.fade-up-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.16);
 }

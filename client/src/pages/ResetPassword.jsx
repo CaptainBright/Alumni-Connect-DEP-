@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import axios from 'axios'
+import { resetPassword as resetPasswordApi } from '../api/authApi'
 
 export default function ResetPassword() {
     const [password, setPassword] = useState('')
@@ -14,7 +14,6 @@ export default function ResetPassword() {
     // Get email and resetToken from navigation state
     const { email, resetToken } = location.state || {}
 
-    const API_URL = 'http://localhost:5001/api/auth'
 
     useEffect(() => {
         // If we don't have the token, redirect to login or forgot password
@@ -41,11 +40,7 @@ export default function ResetPassword() {
         }
 
         try {
-            const response = await axios.post(`${API_URL}/reset-password`, {
-                email,
-                newPassword: password,
-                resetToken
-            })
+            await resetPasswordApi(email, password, resetToken)
 
             setSuccess(true)
             setTimeout(() => {

@@ -1,5 +1,25 @@
-// client/src/pages/Donation.jsx
 import React, { useState } from 'react'
+
+const campaigns = [
+  {
+    name: 'Scholarship Fund',
+    target: 2500000,
+    raised: 1250000,
+    color: 'bg-blue-500'
+  },
+  {
+    name: 'Women in Tech Initiative',
+    target: 1500000,
+    raised: 675000,
+    color: 'bg-rose-500'
+  },
+  {
+    name: 'Advanced Lab Upgrade',
+    target: 2000000,
+    raised: 850000,
+    color: 'bg-emerald-500'
+  }
+]
 
 export default function Donation() {
   const [amount, setAmount] = useState(1000)
@@ -11,62 +31,64 @@ export default function Donation() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    // placeholder: your server should handle Razorpay/PayU for India
-    // For now just simulate success
+
     setTimeout(() => {
-      setMessage(`धन्यवाद! हमने आपके ₹${amount.toLocaleString('en-IN')} का दान "${designation}" में प्राप्त किया है। (डेमो)`)
+      setMessage(
+        `Thank you. We received your demo contribution of INR ${amount.toLocaleString('en-IN')} for "${designation}".`
+      )
       setLoading(false)
-    }, 1000)
+    }, 900)
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-3 text-gray-900">आज ही दान करें</h1>
-        <p className="text-lg text-gray-600">
-          छात्रवृत्ति कार्यक्रम, कार्यक्रमों और सामुदायिक कार्यक्रमों का समर्थन करें।
+    <div className="max-w-6xl mx-auto px-6 md:px-10 py-10">
+      <div className="bg-white rounded-2xl border border-slate-200 p-8">
+        <h1 className="text-4xl font-bold text-slate-900">Volunteer and Give Back</h1>
+        <p className="mt-3 text-slate-600 max-w-3xl">
+          Support scholarships, mentoring programs, and community initiatives at IIT Ropar.
+          You can contribute funds or volunteer your time and expertise.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        {/* Main Form */}
+      <div className="mt-8 grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
-          <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 space-y-6">
+          <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-4">दान की राशि चुनें</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-4">Choose donation amount</label>
               <div className="grid grid-cols-4 gap-3 mb-4">
-                {[500, 1000, 2500, 5000].map(a => (
+                {[500, 1000, 2500, 5000].map((preset) => (
                   <button
                     type="button"
-                    key={a}
-                    onClick={() => setAmount(a)}
+                    key={preset}
+                    onClick={() => setAmount(preset)}
                     className={`p-3 rounded-lg font-semibold transition ${
-                      amount === a 
-                        ? 'bg-[var(--cardinal)] text-white shadow-md' 
-                        : 'border border-gray-300 text-gray-700 hover:border-[var(--cardinal)]'
+                      amount === preset
+                        ? 'bg-[var(--cardinal)] text-white shadow-md'
+                        : 'border border-slate-300 text-slate-700 hover:border-[var(--cardinal)]'
                     }`}
                   >
-                    ₹{a.toLocaleString('en-IN')}
+                    INR {preset.toLocaleString('en-IN')}
                   </button>
                 ))}
               </div>
-              
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-semibold text-gray-700">अन्य राशि:</label>
-                <input
-                  type="number"
-                  min="100"
-                  step="100"
-                  value={amount}
-                  onChange={e => setAmount(Number(e.target.value))}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--cardinal)] w-40"
-                />
-              </div>
+              <label className="text-sm font-semibold text-slate-700">Custom amount</label>
+              <input
+                type="number"
+                min="100"
+                step="100"
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                className="mt-2 w-48 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[var(--cardinal)]"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">दान के लिए निधि चुनें</label>
-              <select value={designation} onChange={e => setDesignation(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--cardinal)]">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Designation</label>
+              <select
+                value={designation}
+                onChange={(e) => setDesignation(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[var(--cardinal)]"
+              >
                 <option>General Fund</option>
                 <option>Scholarships</option>
                 <option>Events</option>
@@ -75,130 +97,71 @@ export default function Donation() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">ईमेल (रसीद के लिए)</label>
-              <input 
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Email for receipt</label>
+              <input
                 type="email"
                 required
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--cardinal)]" 
-                placeholder="you@example.com" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@iitrpr.ac.in"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[var(--cardinal)]"
               />
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
-              className="w-full py-3 bg-[var(--cardinal)] text-white font-bold rounded-lg hover:opacity-90 disabled:opacity-50 transition text-lg"
+              className="w-full py-3 bg-[var(--cardinal)] text-white font-bold rounded-lg hover:opacity-90 disabled:opacity-50 transition"
             >
-              {loading ? 'प्रसंस्करण...' : `₹${amount.toLocaleString('en-IN')} दान करें`}
+              {loading ? 'Processing...' : `Contribute INR ${amount.toLocaleString('en-IN')}`}
             </button>
 
-            <p className="text-xs text-gray-500 text-center">यह डेमो है। प्रोडक्शन में Razorpay/PayU को एकीकृत करें।</p>
+            <p className="text-xs text-slate-500 text-center">
+              Demo payment flow. Integrate Razorpay/PayU in production.
+            </p>
 
-            {message && <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">{message}</div>}
+            {message && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
+                {message}
+              </div>
+            )}
           </form>
         </div>
 
-        {/* Campaign Cards Sidebar */}
         <div className="space-y-4">
-          {/* Campaign 1 */}
-          <div className="bg-blue-50 p-6 rounded-xl border border-blue-200 hover:shadow-lg transition">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">📚</span>
-              <h3 className="font-bold text-gray-900">छात्रवृत्ति कोष</h3>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600">
-              <p>लक्ष्य: ₹25,00,000</p>
-              <p>जमा: ₹12,50,000</p>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                <div className="bg-blue-500 h-2 rounded-full" style={{ width: '50%' }}></div>
+          {campaigns.map((campaign) => {
+            const percentage = Math.min(100, Math.round((campaign.raised / campaign.target) * 100))
+            return (
+              <div key={campaign.name} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <img src="/hero.jpg" alt={campaign.name} className="w-full h-28 object-cover" />
+                <div className="p-4">
+                  <h3 className="font-bold text-slate-900">{campaign.name}</h3>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Target: INR {campaign.target.toLocaleString('en-IN')}
+                  </p>
+                  <p className="text-xs text-slate-600">
+                    Raised: INR {campaign.raised.toLocaleString('en-IN')}
+                  </p>
+                  <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
+                    <div className={`${campaign.color} h-2 rounded-full`} style={{ width: `${percentage}%` }} />
+                  </div>
+                </div>
               </div>
-            </div>
-            <button className="mt-4 w-full px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-              योगदान दें
-            </button>
-          </div>
-
-          {/* Campaign 2 */}
-          <div className="bg-purple-50 p-6 rounded-xl border border-purple-200 hover:shadow-lg transition">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">👩‍💼</span>
-              <h3 className="font-bold text-gray-900">महिला सशक्तीकरण</h3>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600">
-              <p>लक्ष्य: ₹15,00,000</p>
-              <p>जमा: ₹6,75,000</p>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                <div className="bg-purple-500 h-2 rounded-full" style={{ width: '45%' }}></div>
-              </div>
-            </div>
-            <button className="mt-4 w-full px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition">
-              योगदान दें
-            </button>
-          </div>
-
-          {/* Campaign 3 */}
-          <div className="bg-green-50 p-6 rounded-xl border border-green-200 hover:shadow-lg transition">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">💻</span>
-              <h3 className="font-bold text-gray-900">Tech Lab Initiative</h3>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600">
-              <p>लक्ष्य: ₹20,00,000</p>
-              <p>जमा: ₹8,50,000</p>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: '42.5%' }}></div>
-              </div>
-            </div>
-            <button className="mt-4 w-full px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition">
-              योगदान दें
-            </button>
-          </div>
+            )
+          })}
         </div>
       </div>
 
-      {/* Impact Section */}
-      <section className="mt-16 bg-white rounded-2xl p-8 border border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">आपका दान कहां जाता है?</h2>
-        <div className="grid md:grid-cols-4 gap-6 text-center">
-          {[
-            { number: '5000+', label: 'लाभार्थी' },
-            { number: '₹5 Cr+', label: 'कुल दान' },
-            { number: '25+', label: 'कार्यक्रम' },
-            { number: '10', label: 'शहर' },
-          ].map((stat, idx) => (
-            <div key={idx}>
-              <p className="text-3xl font-bold text-orange-600 mb-2">{stat.number}</p>
-              <p className="text-gray-600 font-medium">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Volunteer Section */}
-      <section className="mt-12 bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-8 border border-orange-200">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">🙋 स्वयंसेवी बनें</h2>
-        <p className="text-gray-700 mb-6">
-          दान देने के अलावा, आप अपना समय और कौशल योगदान कर सकते हैं। शिक्षण, mentoring, event organization, या research में मदद करें।
+      <section className="mt-10 bg-white rounded-2xl border border-slate-200 p-8">
+        <h2 className="text-2xl font-bold text-slate-900">Volunteer with IIT Ropar Alumni Network</h2>
+        <p className="mt-2 text-slate-600">
+          In addition to donations, you can support by mentoring students, organizing events, and helping with research or chapter activities.
         </p>
-        <div className="grid md:grid-cols-3 gap-4 mb-6">
-          <div className="flex items-center gap-2 text-gray-700">
-            <span className="text-xl">✏️</span>
-            <span>शिक्षण और Mentoring</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-700">
-            <span className="text-xl">📅</span>
-            <span>Event Organization</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-700">
-            <span className="text-xl">🔍</span>
-            <span>Research और Development</span>
-          </div>
+        <div className="mt-5 grid md:grid-cols-3 gap-4 text-sm text-slate-700">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">Teaching and Mentorship</div>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">Event Planning and Execution</div>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">Research and Development Support</div>
         </div>
-        <button className="px-6 py-3 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 transition">
-          स्वयंसेवक के रूप में साइन अप करें
-        </button>
       </section>
     </div>
   )

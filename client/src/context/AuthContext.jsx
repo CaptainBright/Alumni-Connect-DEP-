@@ -1,92 +1,181 @@
-// client/src/context/AuthContext.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { isAdminProfile, isProfileApproved } from '../lib/authProfile'
+import {
+  ensureProfile,
+  isAdminProfile,
+  isProfileApproved,
+  normalizeUserType
+} from '../lib/authProfile'
 import { AuthContext } from './auth-context'
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
-  const [authStatus, setAuthStatus] = useState("guest") 
+  const [authStatus, setAuthStatus] = useState('guest')
   const [loading, setLoading] = useState(true)
 
-  // 🔥 Fetch profile and decide role
-  const evaluateUser = async (session) => {
-    if (!session?.user) {
-      setAuthStatus("guest")
-      setProfile(null)
-      return
-    }
+  /* ---------------- PROFILE STATUS SETTER ---------------- */
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("user_type, approval_status, is_approved")
-      .eq("id", session.user.id)
-      .single()
+  const setAuthFromProfile = (profileData) => {
+    setProfile(profileData)
 
-    if (error || !data) {
-      setAuthStatus("guest")
-      return
-    }
-
-    setProfile(data)
-
-    if (!isProfileApproved(data)) {
-      setAuthStatus("pending")
-    } else if (isAdminProfile(data)) {
-      setAuthStatus("admin")
+    if (!isProfileApproved(profileData)) {
+      setAuthStatus('pending')
+    } else if (isAdminProfile(profileData)) {
+      setAuthStatus('admin')
     } else {
-      setAuthStatus("approved")
+      setAuthStatus('approved')
     }
   }
 
-  useEffect(() => {
-    let mounted = true
+  /* ---------------- USER EVALUATION ---------------- */
 
-    const loadSession = async () => {
-      const { data } = await supabase.auth.getSession()
+  const evaluateUser = async (currentSession) => {
+    if (!currentSession?.user) {
+      setProfile(null)
+      setAuthStatus('guest')
+      return
+    }
+
+    const authUser = currentSession.user
+
+    try {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle()
+
+      if (error) {
+        console.error('Profile fetch error:', error.message)
+      }
+
+      if (profileData) {
+        setAuthFromProfile(profileData)
+        return
+      }
+
+      /* If no profile found → create one */
+      const normalizedType = normalizeUserType(
+        authUser.user_metadata?.user_type ||
+        authUser.user_metadata?.userType
+      )
+
+      const isAdmin = normalizedType === 'Admin'
+
+      const { data: ensuredProfile, error: ensureError } =
+        await ensureProfile(authUser, {
+          userType: normalizedType,
+          email: authUser.email || null,
+          isApproved: isAdmin,
+          approvalStatus: isAdmin ? 'APPROVED' : 'PENDING'
+        })
+
+      if (ensureError) {
+        console.error('Error ensuring profile:', ensureError.message)
+        setAuthStatus('pending')
+        return
+      }
+
+      if (ensuredProfile) {
+        setAuthFromProfile(ensuredProfile)
+      }
+
+    } catch (err) {
+      console.error('Unexpected evaluateUser error:', err.message)
+      setAuthStatus('pending')
+    }
+  }
+
+  /* ---------------- INITIAL SESSION LOAD ---------------- */
+
+  useEffect(() => {
+  let mounted = true
+  const activeUserRef = { current: null }
+
+  const initialize = async () => {
+    const { data } = await supabase.auth.getSession()
+    const currentSession = data?.session || null
+
+    if (!mounted) return
+
+    setSession(currentSession)
+    setUser(currentSession?.user || null)
+
+    activeUserRef.current = currentSession?.user?.id || null
+
+    if (currentSession?.user) {
+      await evaluateUser(currentSession)
+    } else {
+      setProfile(null)
+      setAuthStatus('guest')
+    }
+
+    setLoading(false)
+  }
+
+  initialize()
+
+  const { data: listener } = supabase.auth.onAuthStateChange(
+    async (event, nextSession) => {
       if (!mounted) return
 
-      const currentSession = data.session || null
-      setSession(currentSession)
-      setUser(currentSession?.user || null)
+      const nextUserId = nextSession?.user?.id || null
 
-      await evaluateUser(currentSession)
-      setLoading(false)
-    }
+      // 🚫 Ignore INITIAL_SESSION (already handled in initialize)
+      if (event === 'INITIAL_SESSION') return
 
-    loadSession()
+      // 🚫 Ignore duplicate SIGNED_IN only if profile already loaded
+      if (
+        event === 'SIGNED_IN' &&
+        activeUserRef.current === nextUserId &&
+        profile !== null
+      ) {
+        return
+      }
 
-    const { data } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+      activeUserRef.current = nextUserId
+
       setSession(nextSession || null)
       setUser(nextSession?.user || null)
-      await evaluateUser(nextSession)
-    })
 
-    return () => {
-      mounted = false
-      data.subscription?.unsubscribe()
+      if (nextSession?.user) {
+        await evaluateUser(nextSession)
+      } else {
+        setProfile(null)
+        setAuthStatus('guest')
+      }
     }
-  }, [])
+  )
+
+  return () => {
+    mounted = false
+    listener?.subscription?.unsubscribe()
+  }
+}, [])
+
+
+
+
+  /* ---------------- SIGN OUT ---------------- */
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    setAuthStatus("guest")
+    setSession(null)
+    setUser(null)
     setProfile(null)
+    setAuthStatus('guest')
   }
 
-  const value = useMemo(
-    () => ({
-      session,
-      user,
-      profile,
-      authStatus,   // ⭐ main thing your app will use
-      loading,
-      signOut
-    }),
-    [session, user, profile, authStatus, loading]
-  )
+  const value = useMemo(() => ({
+    session,
+    user,
+    profile,
+    authStatus,
+    loading,
+    signOut
+  }), [session, user, profile, authStatus, loading])
 
   return (
     <AuthContext.Provider value={value}>
