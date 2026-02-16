@@ -1,24 +1,6 @@
-// client/src/pages/AdminLogin.jsx
 import React, { useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import { isAdminProfile, isProfileApproved } from '../lib/authProfile'
-import { useNavigate, Link } from 'react-router-dom'
-
-
-function getProfileFetchErrorMessage(profileError) {
-  const rawMessage = profileError?.message || ''
-  const normalized = rawMessage.toLowerCase()
-
-  if (
-    profileError?.code === '42P17' ||
-    normalized.includes('infinite recursion') ||
-    profileError?.status === 500
-  ) {
-    return 'Failed to fetch profile (Supabase RLS policy error). Please run the RLS fixes in docs/ROLE_BASED_AUTH_SETUP.md.'
-  }
-
-  return `Failed to fetch profile${rawMessage ? `: ${rawMessage}` : ''}`
-}
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -26,6 +8,7 @@ export default function AdminLogin() {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const nav = useNavigate()
+  const { login, logout } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -33,60 +16,29 @@ export default function AdminLogin() {
     setLoading(true)
 
     try {
-      // Sign in
-      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
+      const result = await login(email, password)
 
-      if (signInError) {
-        setError(`Login failed: ${signInError.message}`)
+      if (!result.success) {
+        setError(result.error)
         setLoading(false)
         return
       }
 
-      if (!user?.id) {
-        setError('Login failed - no user returned')
+      const user = result.data
+      const role = (user.role || '').toLowerCase()
+
+      if (role !== 'admin') {
+        await logout()
+        setError('Admin access denied. This account is not registered as admin.')
         setLoading(false)
         return
       }
 
-      // Check if user is Admin
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_type, approval_status, is_approved')
-        .eq('id', user.id)
-        .single()
-
-      if (profileError) {
-        setError(getProfileFetchErrorMessage(profileError))
-        setLoading(false)
-        return
-      }
-
-      if (!isAdminProfile(profile)) {
-        setError('❌ Admin access denied. This account is not registered as an admin.')
-        
-        // Sign out non-admin user
-        await supabase.auth.signOut()
-        setLoading(false)
-        return
-      }
-
-      if (!isProfileApproved(profile)) {
-        setError('❌ Admin account pending approval. Contact super admin.')
-        await supabase.auth.signOut()
-        setLoading(false)
-        return
-      }
-
-      // Success - go to admin dashboard
-      alert('✅ Logged in as Admin!')
+      // Admin + Logged In = Success
       nav('/admin')
+
     } catch (err) {
-      console.error('Admin login error:', err)
-      setError(err.message || 'Login failed')
-    } finally {
+      setError('An unexpected error occurred')
       setLoading(false)
     }
   }
@@ -96,9 +48,9 @@ export default function AdminLogin() {
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
           <div className="text-center mb-8">
-            <div className="text-5xl mb-4">🔐</div>
+            <img src="/image.png" alt="Admin Access" className="h-12 w-12 mx-auto mb-4 rounded-md object-cover" />
             <h1 className="text-3xl font-bold text-gray-900">Admin Login</h1>
-            <p className="text-gray-600 mt-2">Access the Management Dashboard</p>
+            <p className="text-gray-600 mt-2">Access the management dashboard</p>
           </div>
 
           {error && (
@@ -109,28 +61,24 @@ export default function AdminLogin() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Admin Email *
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Admin Email *</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
+                placeholder="admin@iitrpr.ac.in"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Password *
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter password"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:outline-none"
               />

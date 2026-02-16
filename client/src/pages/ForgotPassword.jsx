@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import axios from 'axios'
+import { sendResetOtp, verifyResetOtp } from '../api/authApi'
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState('')
@@ -17,8 +17,6 @@ export default function ForgotPassword() {
     // Based on package.json, server runs on default logic? Usually 5000.
     // I will assume localhost:5000 for now, or use relative /api if proxy exists.
     // Previous analysis didn't show vite.config proxy.
-    const API_URL = 'http://localhost:5001/api/auth'
-
     const handleSendOtp = async (e) => {
         e.preventDefault()
         setLoading(true)
@@ -26,7 +24,7 @@ export default function ForgotPassword() {
         setMessage(null)
 
         try {
-            const response = await axios.post(`${API_URL}/send-otp`, { email: email.trim() })
+            await sendResetOtp(email)
 
             setMessage('OTP sent to your email! Please check your inbox.')
             setShowOtpInput(true)
@@ -43,10 +41,7 @@ export default function ForgotPassword() {
         setError(null)
 
         try {
-            const response = await axios.post(`${API_URL}/verify-otp`, {
-                email: email.trim(),
-                otp: otp.trim()
-            })
+            const response = await verifyResetOtp(email, otp)
 
             // We receive a resetToken from backend
             const { resetToken } = response.data
@@ -97,7 +92,7 @@ export default function ForgotPassword() {
                                 type="email"
                                 required
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:border-transparent"
-                                placeholder="you@stanford.edu"
+                                placeholder="you@iitrpr.ac.in"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                             />
