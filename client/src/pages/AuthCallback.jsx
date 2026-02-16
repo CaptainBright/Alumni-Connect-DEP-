@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import { ensureProfile, isProfileApproved } from '../lib/authProfile'
+import { useAuth } from '../hooks/useAuth'
 
 export default function AuthCallback() {
   const [error, setError] = useState(null)
   const nav = useNavigate()
+  const { googleLogin } = useAuth()
 
   useEffect(() => {
     let mounted = true
@@ -13,67 +14,38 @@ export default function AuthCallback() {
     const finishAuth = async () => {
       const params = new URLSearchParams(window.location.search)
       const nextPath = params.get('next') || '/dashboard'
-      const flow = params.get('flow') || 'login'
 
       try {
-        let user = null
+        // 1. Get Supabase Session (contains Google Access Token)
+        let session = null
         for (let i = 0; i < 3; i += 1) {
-          const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+          const { data, error: sessionError } = await supabase.auth.getSession()
           if (sessionError) throw sessionError
 
-          user = sessionData.session?.user || null
-          if (user?.id) break
-
-          // PKCE exchange can take a moment after redirect.
+          if (data.session?.user) {
+            session = data.session
+            break
+          }
           await new Promise((resolve) => setTimeout(resolve, 250))
         }
 
-        if (!user?.id) {
+        if (!session?.user) {
           throw new Error('No authenticated user returned from Supabase')
         }
 
-        const pendingType = window.localStorage.getItem('pending_user_type')
-        const pendingDraftRaw = window.localStorage.getItem('pending_profile_draft')
-        let pendingDraft = {}
+        // 2. Exchange Token with Server to get Session Cookie
+        const result = await googleLogin(session.access_token, session.refresh_token)
 
-        if (pendingDraftRaw) {
-          try {
-            pendingDraft = JSON.parse(pendingDraftRaw)
-          } catch {
-            pendingDraft = {}
-          }
-        }
-
-        const { data: profile, error: profileError } = await ensureProfile(user, {
-          ...pendingDraft,
-          userType: pendingType || pendingDraft.userType || undefined,
-          isApproved: false,
-          approvalStatus: 'PENDING'
-        })
-
-        window.localStorage.removeItem('pending_user_type')
-        window.localStorage.removeItem('pending_profile_draft')
-
-        if (profileError) throw profileError
-
-        if (!isProfileApproved(profile) || flow === 'register') {
-          await supabase.auth.signOut()
-          if (mounted) {
-            nav('/login', {
-              replace: true,
-              state: {
-                info: 'Your profile has been submitted for admin verification. You can log in after approval.'
-              }
-            })
-          }
-          return
+        if (!result.success) {
+          throw new Error(result.error)
         }
 
         if (mounted) nav(nextPath, { replace: true })
+
       } catch (err) {
-        window.localStorage.removeItem('pending_user_type')
-        window.localStorage.removeItem('pending_profile_draft')
         if (mounted) setError(err.message || 'Authentication callback failed')
+        // Force logout if failed to sync with server
+        await supabase.auth.signOut()
       }
     }
 
@@ -82,7 +54,7 @@ export default function AuthCallback() {
     return () => {
       mounted = false
     }
-  }, [nav])
+  }, [nav, googleLogin])
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">

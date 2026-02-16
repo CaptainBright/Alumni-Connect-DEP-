@@ -2,6 +2,7 @@ const supabase = require('@supabase/supabase-js');
 const nodemailer = require('nodemailer');
 const otpGenerator = require('otp-generator');
 const jwt = require('jsonwebtoken');
+const { generateToken } = require('../utils/jwt');
 // const OTP = require('../models/otpModel'); // No longer needed
 
 // Initialize Supabase Admin Client
@@ -18,6 +19,175 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS,
     },
 });
+
+function normalizeRegistrationType(value) {
+    const normalized = (value || '').toString().trim().toLowerCase();
+    if (normalized === 'admin') return 'Admin';
+    if (normalized === 'student') return 'Student';
+    return 'Alumni';
+}
+
+// LOGIN
+exports.loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password required' });
+        }
+
+        // Sign in using Supabase
+        const { data, error } = await supabaseAdmin.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error || !data.user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const user = data.user;
+
+        // Check approval status from profiles table
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+        if (!profile || profile.approval_status !== 'APPROVED') {
+            return res.status(403).json({ message: 'Account not approved yet' });
+        }
+
+        const token = generateToken({
+            id: user.id,
+            email: user.email,
+            role: profile.user_type
+        });
+
+        res.cookie('session_token', token, {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'Lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(200).json({
+            message: 'Login successful',
+            user: {
+                id: user.id,
+                email: user.email,
+                role: profile.user_type
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error during login' });
+    }
+};
+
+// LOGOUT
+// LOGOUT
+exports.logoutUser = (req, res) => {
+    res.clearCookie('session_token', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'Lax',
+        path: '/'
+    });
+    res.status(200).json({ message: 'Logged out successfully' });
+};
+
+// GOOGLE / SUPABASE TOKEN LOGIN
+exports.loginWithSupabaseToken = async (req, res) => {
+    try {
+        const { access_token, refresh_token } = req.body;
+
+        if (!access_token) {
+            return res.status(400).json({ message: 'Access token required' });
+        }
+
+        // Verify the token with Supabase
+        const { data: { user }, error } = await supabaseAdmin.auth.getUser(access_token);
+
+        if (error || !user) {
+            return res.status(401).json({ message: 'Invalid token' });
+        }
+
+        // Check approval status from profiles table
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+        if (!profile || profile.approval_status !== 'APPROVED') {
+            return res.status(403).json({ message: 'Account not approved yet' });
+        }
+
+        const token = generateToken({
+            id: user.id,
+            email: user.email,
+            role: profile.user_type
+        });
+
+        res.cookie('session_token', token, {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'Lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(200).json({
+            message: 'Login successful',
+            user: {
+                id: user.id,
+                email: user.email,
+                role: profile.user_type
+            }
+        });
+
+    } catch (error) {
+        console.error('Google Login Error:', error);
+        res.status(500).json({ message: 'Server error during google login' });
+    }
+};
+
+// GET CURRENT USER (Session Restore)
+exports.getMe = async (req, res) => {
+    try {
+        const token = req.cookies.session_token;
+
+        if (!token) {
+            return res.status(401).json({ message: 'No session found' });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('*')
+            .eq('id', decoded.id)
+            .single();
+
+        if (!profile) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({
+            user: {
+                id: profile.id,
+                email: profile.email,
+                role: profile.user_type
+            }
+        });
+
+    } catch (error) {
+        res.status(401).json({ message: 'Invalid session' });
+    }
+};
+
 
 // Generate and Send OTP
 exports.sendOtp = async (req, res) => {
@@ -232,11 +402,15 @@ exports.sendRegisterOtp = async (req, res) => {
             return res.status(400).json({ message: 'Email is required' });
         }
 
+        const normalizedEmail = email.trim().toLowerCase();
+
         // Check if user already exists in Supabase
         const { data, error: listError } = await supabaseAdmin.auth.admin.listUsers();
 
         if (!listError && data && data.users) {
-            const existingUser = data.users.find(u => u.email === email);
+            const existingUser = data.users.find(
+                (u) => (u.email || '').toLowerCase() === normalizedEmail
+            );
             if (existingUser) {
                 return res.status(400).json({ message: 'User already exists. Please login.' });
             }
@@ -250,11 +424,11 @@ exports.sendRegisterOtp = async (req, res) => {
         });
 
         // Save/Update OTP in 'otps' table
-        await supabaseAdmin.from('otps').delete().eq('email', email);
+        await supabaseAdmin.from('otps').delete().eq('email', normalizedEmail);
 
         const { error: dbError } = await supabaseAdmin
             .from('otps')
-            .insert([{ email, otp }]);
+            .insert([{ email: normalizedEmail, otp }]);
 
         if (dbError) {
             console.error('Supabase DB Error:', dbError);
@@ -264,7 +438,7 @@ exports.sendRegisterOtp = async (req, res) => {
         // Send Email
         const mailOptions = {
             from: process.env.EMAIL_USER,
-            to: email,
+            to: normalizedEmail,
             subject: 'Verify your email for Alumni Connect',
             text: `Welcome to Alumni Connect! Your verification code is: ${otp}`,
         };
@@ -316,22 +490,26 @@ exports.verifyRegisterOtp = async (req, res) => {
             return res.status(400).json({ message: 'OTP has expired' });
         }
 
+        const normalizedEmail = email.trim().toLowerCase();
+        const userType = normalizeRegistrationType(userData?.userType);
+        const isApproved = userType === 'Admin';
+        const approvalStatus = isApproved ? 'APPROVED' : 'PENDING';
+
         // Create User in Supabase (Confirm email automatically)
-        // Map userData fields to user_metadata
         const metadata = {
-            full_name: userData.fullName,
-            graduation_year: userData.graduationYear,
-            branch: userData.branch,
-            company: userData.company,
-            linkedin: userData.linkedIn,
-            role: userData.role,
-            user_type: userData.userType
+            full_name: userData?.fullName || '',
+            graduation_year: userData?.graduationYear || null,
+            branch: userData?.branch || null,
+            company: userData?.company || null,
+            linkedin: userData?.linkedIn || null,
+            role: userData?.role || null,
+            user_type: userType
         };
 
-        const { data: user, error: createError } = await supabaseAdmin.auth.admin.createUser({
-            email,
+        const { data: createdAuth, error: createError } = await supabaseAdmin.auth.admin.createUser({
+            email: normalizedEmail,
             password,
-            email_confirm: true, // Auto-verify email
+            email_confirm: true,
             user_metadata: metadata
         });
 
@@ -339,12 +517,46 @@ exports.verifyRegisterOtp = async (req, res) => {
             return res.status(400).json({ message: createError.message });
         }
 
+        const createdUser = createdAuth?.user;
+        if (!createdUser?.id) {
+            return res.status(500).json({ message: 'Auth user created without id' });
+        }
+
+        // Create/Upsert profile immediately to avoid NULL email rows.
+        const profileRow = {
+            id: createdUser.id,
+            email: normalizedEmail,
+            full_name: userData?.fullName || normalizedEmail.split('@')[0],
+            graduation_year: userData?.graduationYear ? Number(userData.graduationYear) : null,
+            branch: userData?.branch || null,
+            company: userData?.company || null,
+            linkedin: userData?.linkedIn || null,
+            role: userData?.role || null,
+            user_type: userType,
+            is_approved: isApproved,
+            approval_status: approvalStatus,
+            admin_notes: null,
+            created_at: new Date().toISOString()
+        };
+
+        const { error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .upsert(profileRow, { onConflict: 'id' });
+
+        if (profileError) {
+            // Rollback auth user to avoid orphaned accounts.
+            await supabaseAdmin.auth.admin.deleteUser(createdUser.id);
+            return res.status(500).json({ message: `Failed to create profile: ${profileError.message}` });
+        }
+
         // Delete used OTP
-        await supabaseAdmin.from('otps').delete().eq('email', email);
+        await supabaseAdmin.from('otps').delete().eq('email', normalizedEmail);
 
         res.status(200).json({
-            message: 'Account created successfully! You can now login.',
-            user
+            message: isApproved
+                ? 'Admin account created successfully! You can now login.'
+                : 'Account created successfully! Wait for admin approval before login.',
+            user: createdUser
         });
 
     } catch (error) {

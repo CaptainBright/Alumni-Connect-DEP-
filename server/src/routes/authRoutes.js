@@ -1,12 +1,21 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { loginUser, sendOtp, verifyOtp, resetPassword, sendRegisterOtp, verifyRegisterOtp } = require("../controllers/authController");
+const authController = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware');
 
-router.post("/login", (req, res) => res.status(501).json({ message: "Use Supabase client for login" })); // Placeholder or keep generic
-router.post("/send-otp", sendOtp);
-router.post("/verify-otp", verifyOtp);
-router.post("/reset-password", resetPassword);
-router.post("/send-register-otp", sendRegisterOtp);
-router.post("/verify-register-otp", verifyRegisterOtp);
+// Session routes
+// Session routes
+router.post('/login', authController.loginUser);
+router.post('/login-with-token', authController.loginWithSupabaseToken);
+router.post('/logout', authController.logoutUser);
+router.get('/me', protect, authController.getMe);
+
+// Existing OTP routes
+router.post('/send-otp', authController.sendOtp);
+router.post('/verify-otp', authController.verifyOtp);
+router.post('/reset-password', authController.resetPassword);
+
+router.post('/send-register-otp', authController.sendRegisterOtp);
+router.post('/verify-register-otp', authController.verifyRegisterOtp);
 
 module.exports = router;
