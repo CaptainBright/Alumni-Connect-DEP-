@@ -41,6 +41,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             <nav className="hidden lg:flex items-center gap-8 text-white font-semibold">
               <Link to="/" className="hover:text-white/80 transition">Events</Link>
+              <Link to="/about" className="hover:text-white/80 transition">About</Link>
               <Link to="/resources" className="hover:text-white/80 transition">Reading and Resources</Link>
               <Link to="/directory" className="hover:text-white/80 transition">Programs and Perks</Link>
               <Link to="/jobs" className="hover:text-white/80 transition">Communities</Link>

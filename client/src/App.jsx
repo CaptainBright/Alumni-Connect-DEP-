@@ -5,6 +5,7 @@ import Footer from './components/Footer'
 
 import Home from './pages/Home'
 import Directory from './pages/Directory'
+import About from './pages/About'
 import Jobs from './pages/Jobs'
 import Resources from './pages/Resources'
 import Donation from './pages/Donation'
@@ -31,6 +32,7 @@ export default function App() {
           {/* PUBLIC ROUTES */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/about" element={<About />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
