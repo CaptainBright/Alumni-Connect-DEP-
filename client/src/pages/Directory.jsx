@@ -25,9 +25,8 @@ export default function Directory() {
   async function fetchProfiles() {
     try {
       let qb = supabase
-        .from('profiles')
+        .from('alumni_directory')
         .select('*', { count: 'exact' })
-        .eq('approval_status', 'APPROVED')
 
       if (q && q.length > 0) {
         qb = qb.or(`full_name.ilike.%${q}%,company.ilike.%${q}%,branch.ilike.%${q}%`)
