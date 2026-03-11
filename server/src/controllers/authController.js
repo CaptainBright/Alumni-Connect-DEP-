@@ -8,7 +8,12 @@ const { generateToken } = require('../utils/jwt');
 // Initialize Supabase Admin Client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAdmin = supabase.createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = supabase.createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+    },
+});
 
 // Configure Nodemailer Transporter
 // IMPORTANT: You need to set EMAIL_USER and EMAIL_PASS in your .env file
