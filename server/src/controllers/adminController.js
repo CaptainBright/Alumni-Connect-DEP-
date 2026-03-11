@@ -3,7 +3,12 @@ const supabase = require('@supabase/supabase-js');
 // Initialize Supabase Admin Client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAdmin = supabase.createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = supabase.createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+    },
+});
 
 // Get All Profiles (Filtered by status if query param provided)
 exports.getProfiles = async (req, res) => {
