@@ -11,7 +11,7 @@ const authClient = axios.create({
 // ---------- SESSION AUTH ----------
 
 export async function loginUser(email, password) {
-  return authClient.post('/login', { email, password })
+  return authClient.post('/login', { email: email.trim(), password })
 }
 
 export async function loginWithSupabaseToken(accessToken, refreshToken) {
