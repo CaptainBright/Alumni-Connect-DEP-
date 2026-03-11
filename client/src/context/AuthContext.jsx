@@ -23,35 +23,13 @@ export function AuthProvider({ children }) {
     // Server returns: { id, email, role }
     // We map this to our app's status
     const role = (userData.role || '').toLowerCase()
+    const approvalStatus = (userData.approval_status || '').toUpperCase()
 
     if (role === 'admin') {
       setAuthStatus('admin')
+    } else if (approvalStatus === 'PENDING') {
+      setAuthStatus('pending')
     } else {
-      // For regular users, we might need 'is_approved' or check specific status if server returns it
-      // The server login/me response currently returns: role: profile.user_type
-      // It DOES NOT explicitly return approval_status in the simplified 'user' object in authController.js
-      // BUT authController.js checks approval status before login:
-      // if (!profile || profile.approval_status !== 'APPROVED') ... error
-      // So if we are logged in, we are APPROVED (unless admin pending?).
-      // Admin creation: isApproved = true.
-      // Student creation: isApproved = false (Pending).
-
-      // WAIT: authController.getMe DOES NOT check approval status, it just returns the user.
-      // loginUser DOES check approval status.
-      // We should probably rely on the server validation. 
-      // If the server says we are logged in, we assume 'approved' OR 'admin'.
-
-      // Let's check authController.js getMe again.
-      // It returns role = profile.user_type.
-
-      // If we want to support the 'pending' state on the client, the server /me endpoint needs to return approval_status.
-      // Currently authController.js getMe returns:
-      // user: { id, email, role: profile.user_type }
-
-      // If I want to maintain the exact same behavior, I might need to update the server to return approval_status too.
-      // For now, I will assume if 'role' is present, they are authenticated. 
-      // User type 'Student'/'Alumni' -> 'approved' (since login checks it).
-
       setAuthStatus('approved')
     }
   }
@@ -66,7 +44,6 @@ export function AuthProvider({ children }) {
       setSessionFromUser(userData)
       return { success: true, data: userData }
     } catch (error) {
-      console.error('Login error:', error)
       setSessionFromUser(null)
       return {
         success: false,
