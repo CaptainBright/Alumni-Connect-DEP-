@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
+import { uploadAvatar } from '../lib/upload'
 import {
   Briefcase,
   Users,
@@ -15,7 +16,9 @@ import {
   MapPin,
   ChevronRight,
   TrendingUp,
-  Award
+  Award,
+  Camera,
+  Loader2
 } from 'lucide-react'
 
 // Mock Data
@@ -51,6 +54,9 @@ const activityFeed = [
 export default function Dashboard() {
   const [profile, setProfile] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
+  const [avatarUrl, setAvatarUrl] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
   const { user, authStatus } = useAuth()
   const nav = useNavigate()
 
@@ -60,12 +66,13 @@ export default function Dashboard() {
       if (!user?.id) return
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, email, user_type, approval_status, branch, graduation_year, company')
+        .select('full_name, email, user_type, approval_status, branch, graduation_year, company, avatar_url')
         .eq('id', user.id)
         .maybeSingle()
 
       if (!mounted) return
       setProfile(data || null)
+      if (data?.avatar_url) setAvatarUrl(data.avatar_url)
       setLoadingProfile(false)
     }
 
@@ -74,6 +81,36 @@ export default function Dashboard() {
   }, [user?.id])
 
   const isApproved = profile?.approval_status === 'APPROVED'
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !user?.id) return
+
+    // Validate file type and size (max 2MB)
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    if (!validTypes.includes(file.type)) {
+      alert('Please select a valid image file (JPG, PNG, WebP, or GIF).')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image must be smaller than 2 MB.')
+      return
+    }
+
+    try {
+      setUploading(true)
+      const publicUrl = await uploadAvatar(file, user.id)
+      // Append a cache-buster so the browser fetches the new image
+      setAvatarUrl(publicUrl + '?t=' + Date.now())
+    } catch (err) {
+      console.error('Avatar upload failed:', err)
+      alert('Failed to upload avatar. Please try again.')
+    } finally {
+      setUploading(false)
+      // Reset input so re-selecting the same file triggers onChange
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
@@ -97,15 +134,40 @@ export default function Dashboard() {
               <div className="h-24 bg-gradient-to-r from-[var(--cardinal)] to-red-800"></div>
 
               <div className="px-6 pb-6 relative">
-                {/* Profile Photo */}
+                {/* Profile Photo — click to upload */}
                 <div className="flex justify-center -mt-12 mb-4">
-                  <div className="h-24 w-24 rounded-full border-4 border-white bg-white overflow-hidden shadow-md">
+                  <div
+                    className="relative h-24 w-24 rounded-full border-4 border-white bg-white overflow-hidden shadow-md cursor-pointer group"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Click to change profile picture"
+                  >
                     <img
-                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${profile?.full_name || 'User'}&backgroundColor=e2e8f0&textColor=475569`}
+                      src={avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.full_name || 'User'}&backgroundColor=e2e8f0&textColor=475569`}
                       alt="Profile"
                       className="h-full w-full object-cover"
                     />
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                      {uploading
+                        ? <Loader2 className="w-6 h-6 text-white animate-spin" />
+                        : <Camera className="w-6 h-6 text-white" />
+                      }
+                    </div>
+                    {/* Uploading overlay (always visible while uploading) */}
+                    {uploading && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
+                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                      </div>
+                    )}
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                    disabled={uploading}
+                  />
                 </div>
 
                 {/* Name & Details */}

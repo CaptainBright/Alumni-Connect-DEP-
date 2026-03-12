@@ -17,9 +17,11 @@ app.use(cors({
 
 // Routes
 const adminRoutes = require('./routes/adminRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Health check
 app.get('/', (req, res) => {
