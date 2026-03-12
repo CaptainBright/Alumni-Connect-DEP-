@@ -1,6 +1,13 @@
 import React from 'react'
+import { ExternalLink } from 'lucide-react'
 
 export default function JobCard({ job }) {
+  const handleApply = () => {
+    if (job?.url && job.url !== '#') {
+      window.open(job.url, '_blank', 'noopener,noreferrer')
+    }
+  }
+
   return (
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300">
       <div className="flex items-start justify-between gap-4">
@@ -18,12 +25,27 @@ export default function JobCard({ job }) {
             </div>
           )}
         </div>
-        <div className="text-right">
-          <div className="text-sm font-medium text-[var(--cardinal)]">{job?.type}</div>
+        <div className="text-right shrink-0">
+          <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full border ${
+            job?.type === 'Internship'
+              ? 'bg-purple-50 text-purple-700 border-purple-200'
+              : job?.type === 'Part-time'
+              ? 'bg-amber-50 text-amber-700 border-amber-200'
+              : job?.type === 'Contract'
+              ? 'bg-sky-50 text-sky-700 border-sky-200'
+              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          }`}>
+            {job?.type}
+          </span>
           <div className="mt-4">
-            <a href={job?.url || '#'} className="inline-block px-3 py-1 rounded-md border border-slate-300 hover:bg-slate-50">
+            <button
+              onClick={handleApply}
+              disabled={!job?.url || job.url === '#'}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold border border-[var(--cardinal)] text-[var(--cardinal)] hover:bg-[var(--cardinal)] hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               Apply
-            </a>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>
