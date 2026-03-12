@@ -8,18 +8,21 @@ export default function Hero() {
         <div className="absolute inset-0 hero-overlay" />
         <div className="absolute inset-0 flex items-center">
           <div className="max-w-6xl mx-auto px-6 md:px-10 text-center">
-            <h1 className="hero-title text-white text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold">
-              Welcome Home
+            <p className="home-copy uppercase tracking-[0.28em] text-[11px] sm:text-xs text-white/80">
+              IIT Ropar Alumni Connect
+            </p>
+            <h1 className="home-heading text-white text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mt-3">
+              Welcome to the Alumni Portal
             </h1>
 
-            <p className="mt-6 text-white text-base sm:text-lg md:text-xl max-w-4xl mx-auto leading-relaxed">
-              Step into the virtual home of IIT Ropar&apos;s global community where our spirit thrives beyond campus.
-              Reconnect with classmates, discover opportunities, and stay updated with the latest research and community initiatives.
+            <p className="home-copy mt-6 text-white text-base sm:text-lg md:text-xl max-w-4xl mx-auto leading-relaxed">
+              Connect with alumni, discover career opportunities, participate in mentorship, and stay informed about
+              events, initiatives, and academic progress across the IIT Ropar community.
             </p>
 
             <div className="mt-8 flex justify-center gap-3">
-              <a href="/directory" className="px-5 py-3 text-sm rounded-md cardinal-cta shadow-sm">Find Alumni</a>
-              <a href="/resources" className="px-5 py-3 text-sm rounded-md border border-white text-white">Explore Resources</a>
+              <a href="/directory" className="home-copy px-5 py-3 text-sm rounded-md cardinal-cta shadow-sm">Find Alumni</a>
+              <a href="/resources" className="home-copy px-5 py-3 text-sm rounded-md border border-white text-white">Explore Resources</a>
             </div>
           </div>
         </div>
