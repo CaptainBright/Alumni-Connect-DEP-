@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!authLoading) {
       if (authStatus !== 'admin') {
-        nav('/admin-login')
+        nav('/login')
         return
       }
       loadProfiles()
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
 
   const handleLogout = async () => {
     await logout()
-    nav('/admin-login')
+    nav('/login')
   }
 
   if (loading || authLoading) {

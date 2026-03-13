@@ -8,7 +8,12 @@ const { generateToken } = require('../utils/jwt');
 // Initialize Supabase Admin Client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAdmin = supabase.createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = supabase.createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+    },
+});
 
 // Configure Nodemailer Transporter
 // IMPORTANT: You need to set EMAIL_USER and EMAIL_PASS in your .env file
@@ -55,14 +60,15 @@ exports.loginUser = async (req, res) => {
             .eq('id', user.id)
             .single();
 
-        if (!profile || profile.approval_status !== 'APPROVED') {
-            return res.status(403).json({ message: 'Account not approved yet' });
+        if (!profile) {
+            return res.status(403).json({ message: 'Profile not found.' });
         }
 
         const token = generateToken({
             id: user.id,
             email: user.email,
-            role: profile.user_type
+            role: profile.user_type,
+            approval_status: profile.approval_status
         });
 
         res.cookie('session_token', token, {
@@ -77,7 +83,8 @@ exports.loginUser = async (req, res) => {
             user: {
                 id: user.id,
                 email: user.email,
-                role: profile.user_type
+                role: profile.user_type,
+                approval_status: profile.approval_status
             }
         });
 
@@ -122,14 +129,28 @@ exports.loginWithSupabaseToken = async (req, res) => {
             .eq('id', user.id)
             .single();
 
-        if (!profile || profile.approval_status !== 'APPROVED') {
-            return res.status(403).json({ message: 'Account not approved yet' });
+        let currentProfile = profile;
+
+        if (!currentProfile) {
+            const isIitRopar = user.email.endsWith('@iitrpr.ac.in');
+            currentProfile = {
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name || user.email.split('@')[0],
+                user_type: isIitRopar ? 'Student' : 'Alumni',
+                is_approved: false,
+                approval_status: 'PENDING',
+                created_at: new Date().toISOString()
+            };
+
+            await supabaseAdmin.from('profiles').upsert(currentProfile);
         }
 
         const token = generateToken({
             id: user.id,
             email: user.email,
-            role: profile.user_type
+            role: currentProfile.user_type,
+            approval_status: currentProfile.approval_status
         });
 
         res.cookie('session_token', token, {
@@ -144,7 +165,8 @@ exports.loginWithSupabaseToken = async (req, res) => {
             user: {
                 id: user.id,
                 email: user.email,
-                role: profile.user_type
+                role: currentProfile.user_type,
+                approval_status: currentProfile.approval_status
             }
         });
 
@@ -179,7 +201,8 @@ exports.getMe = async (req, res) => {
             user: {
                 id: profile.id,
                 email: profile.email,
-                role: profile.user_type
+                role: profile.user_type,
+                approval_status: profile.approval_status
             }
         });
 
