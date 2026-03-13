@@ -8,6 +8,9 @@ import Directory from './pages/Directory'
 import About from './pages/About'
 import Jobs from './pages/Jobs'
 import Resources from './pages/Resources'
+import CareerPlaybooks from './pages/CareerPlaybooks'
+import ExperienceDetail from './pages/ExperienceDetail'
+import WriteExperience from './pages/WriteExperience'
 import Donation from './pages/Donation'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -54,6 +57,9 @@ export default function App() {
             <Route path="/directory" element={<Directory />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/resources" element={<Resources />} />
+            <Route path="/career-playbooks" element={<CareerPlaybooks />} />
+            <Route path="/career-playbooks/write" element={<WriteExperience />} />
+            <Route path="/career-playbooks/:id" element={<ExperienceDetail />} />
             <Route path="/donation" element={<Donation />} />
           </Route>
 

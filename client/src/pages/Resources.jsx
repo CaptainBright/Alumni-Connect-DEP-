@@ -1,10 +1,11 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 const collections = [
   {
     title: 'Career Playbooks',
     description: 'Interview prep, resume templates, referral strategy, and transition guides.',
-    link: '#',
+    link: '/career-playbooks',
     image: '/hero.jpg'
   },
   {
@@ -47,9 +48,9 @@ export default function Resources() {
             <div className="p-5">
               <h2 className="text-xl font-bold text-slate-900">{item.title}</h2>
               <p className="mt-2 text-sm text-slate-600">{item.description}</p>
-              <a href={item.link} className="inline-block mt-4 text-[var(--cardinal)] font-semibold hover:underline">
+              <Link to={item.link} className="inline-block mt-4 text-[var(--cardinal)] font-semibold hover:underline">
                 Explore Collection
-              </a>
+              </Link>
             </div>
           </article>
         ))}
