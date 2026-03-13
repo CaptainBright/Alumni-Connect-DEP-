@@ -5,7 +5,7 @@ export default function AlumniCard({ alumni }) {
     <article className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
       <div className="flex items-center gap-4">
         <img
-          src={alumni?.avatar_url || '/image.png'}
+          src={alumni?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(alumni?.full_name || 'User')}&backgroundColor=e2e8f0&textColor=475569`}
           alt={alumni?.full_name || 'avatar'}
           className="w-16 h-16 rounded-full object-cover"
         />

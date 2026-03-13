@@ -138,19 +138,20 @@ export default function Login() {
 
           <div className="mt-6 text-center">
             <p className="text-gray-600 text-sm">Don&apos;t have an account? <Link to="/register" className="text-[var(--cardinal)] font-semibold hover:underline">Create one</Link></p>
-            <p className="text-gray-600 text-sm mt-2">
-              Admin? <Link to="/admin-login" className="text-[var(--cardinal)] font-semibold hover:underline">Use admin login</Link>
-            </p>
           </div>
         </div>
 
-        <div className="hidden md:flex flex-col justify-center bg-white/70 border border-slate-200 rounded-2xl p-8 float-soft">
+        <div className="hidden md:flex flex-col justify-between bg-white/80 border border-slate-200 rounded-2xl p-8">
           <div className="space-y-6">
             <div>
               <h3 className="text-4xl font-bold hero-title text-slate-900 mb-2">Alumni Connect</h3>
               <p className="text-slate-700 leading-relaxed text-lg">
                 Connect with fellow IIT Ropar alumni, discover career opportunities, and stay engaged with the community.
               </p>
+            </div>
+
+            <div className="rounded-xl overflow-hidden border border-slate-200">
+              <img src="/iitropar.png" alt="IIT Ropar Campus" className="w-full h-52 object-cover" />
             </div>
 
             <div className="space-y-4">

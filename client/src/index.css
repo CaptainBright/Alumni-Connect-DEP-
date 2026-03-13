@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Merriweather:wght@500;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -27,6 +27,15 @@ body {
   font-family: "Playfair Display", serif;
   letter-spacing: -0.02em;
   line-height: 1.02;
+}
+
+.home-heading {
+  font-family: "Merriweather", serif;
+  letter-spacing: -0.01em;
+}
+
+.home-copy {
+  font-family: "Source Sans 3", "Outfit", "Segoe UI", Arial, sans-serif;
 }
 
 /* sticky nav glass */
@@ -72,4 +81,26 @@ body {
 .fade-up-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 16px 28px rgba(15, 23, 42, 0.16);
+}
+
+.hover-reveal-panel {
+  transform: translateY(calc(100% - 88px));
+  transition: transform 420ms ease;
+}
+
+.group:hover .hover-reveal-panel {
+  transform: translateY(0);
+}
+
+.nav-hover {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  transition: color 220ms ease, text-decoration-color 220ms ease;
+}
+
+.nav-hover:hover {
+  color: var(--cardinal);
+  text-decoration-color: var(--cardinal);
 }

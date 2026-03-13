@@ -7,17 +7,20 @@ const roleCards = [
   {
     value: 'student',
     title: 'Student',
-    description: 'Current IIT Ropar student account'
+    description: 'Current IIT Ropar student account',
+    image: '/student.png'
   },
   {
     value: 'alumni',
     title: 'Alumni',
-    description: 'Graduated alumni account'
+    description: 'Graduated alumni account',
+    image: '/alumni.png'
   },
   {
     value: 'admin',
     title: 'Admin',
-    description: 'Portal management account'
+    description: 'Portal management account',
+    image: '/iitropar.png'
   }
 ]
 
@@ -127,9 +130,9 @@ export default function Register() {
 
       // Success
       if (normalizedType === 'Admin') {
-        nav('/admin-login', {
+        nav('/login', {
           state: {
-            info: 'Admin account created successfully. Please login.'
+            info: 'Admin account created successfully. Please login using the main sign in page.'
           }
         })
       } else {
@@ -181,7 +184,7 @@ export default function Register() {
                           : 'border-gray-300 hover:border-gray-400'
                       }`}
                     >
-                      <img src="/hero.jpg" alt={role.title} className="w-full h-16 rounded-md object-cover mb-2" />
+                      <img src={role.image} alt={role.title} className="w-full h-16 rounded-md object-cover mb-2" />
                       <p className="font-semibold text-gray-900">{role.title}</p>
                       <p className="text-xs text-gray-600">{role.description}</p>
                     </button>
@@ -298,7 +301,11 @@ export default function Register() {
                   onChange={handleChange}
                 />
                 <span className="text-sm text-gray-700">
-                  I agree to the Terms and Privacy Policy
+                  I agree to the{' '}
+                  <Link to="/about#terms-and-conditions" className="text-[var(--cardinal)] font-medium hover:underline">
+                    Terms and Conditions
+                  </Link>{' '}
+                  and Privacy Policy
                 </span>
               </label>
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 
@@ -15,7 +15,6 @@ import Dashboard from './pages/Dashboard'
 import EditProfile from './pages/EditProfile'
 import Messages from './pages/Messages'
 import AuthCallback from './pages/AuthCallback'
-import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -39,7 +38,7 @@ export default function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin-login" element={<Navigate to="/login" replace />} />
           <Route
             element={<ProtectedRoute allow={["pending", "approved", "admin"]} redirectGuest="/login" />}
           >
