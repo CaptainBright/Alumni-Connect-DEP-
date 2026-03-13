@@ -15,8 +15,14 @@ import {
   MapPin,
   ChevronRight,
   TrendingUp,
-  Award
+  Award,
+  Edit,
+  Linkedin,
+  MessageSquare,
+  UserPlus
 } from 'lucide-react'
+
+import { handleConnect, handleMessage } from '../services/alumniCardActions'
 
 // Mock Data
 const quickActions = [
@@ -32,8 +38,8 @@ const upcomingEvents = [
 ]
 
 const recommendedConnections = [
-  { id: 1, name: 'Priya Sharma', role: 'SDE-2 at Google', branch: 'CSE', year: '2020', image: 'https://i.pravatar.cc/150?img=47' },
-  { id: 2, name: 'Rahul Verma', role: 'Product Manager at Microsoft', branch: 'EE', year: '2019', image: 'https://i.pravatar.cc/150?img=11' },
+  { id: 1, name: 'Priya Sharma', role: 'SDE-2 at Google', branch: 'CSE', year: '2020', image: 'https://i.pravatar.cc/150?img=47', linkedin: 'https://linkedin.com/' },
+  { id: 2, name: 'Rahul Verma', role: 'Product Manager at Microsoft', branch: 'EE', year: '2019', image: 'https://i.pravatar.cc/150?img=11', linkedin: 'https://linkedin.com/' },
 ]
 
 const featuredJobs = [
@@ -60,7 +66,7 @@ export default function Dashboard() {
       if (!user?.id) return
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, email, user_type, approval_status, branch, graduation_year, company')
+        .select('full_name, email, user_type, approval_status, branch, graduation_year, company, bio, skills, interests, linkedin')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -147,19 +153,75 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Profile Strength / Optional Extra */}
-            <div className="bg-gradient-to-br from-indigo-50 to-blue-50/50 rounded-2xl border border-indigo-100/60 p-5 shadow-sm">
-              <div className="flex items-center gap-2.5 mb-3">
-                <Award className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-semibold text-slate-900 text-sm">Profile Strength</h3>
+            {/* Custom Details & Edit Profile */}
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col gap-5">
+              <div className="space-y-4">
+                {/* Department & Year (Always display, use placeholder if missing) */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Department</h3>
+                    <p className="text-sm text-slate-800 font-semibold">{profile?.branch || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Graduation</h3>
+                    <p className="text-sm text-slate-800 font-semibold">{profile?.graduation_year ? `'${profile.graduation_year.toString().slice(-2)}` : 'Not provided'}</p>
+                  </div>
+                </div>
+
+                {/* Company & Role */}
+                <div>
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Current Company</h3>
+                  <p className="text-sm text-slate-800 font-semibold">{profile?.company || 'Not added yet'}</p>
+                </div>
+
+                {/* Bio / About */}
+                <div>
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">About Me</h3>
+                  <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                    {profile?.bio || 'No bio added yet. Tell the community about yourself.'}
+                  </p>
+                </div>
+
+                {/* Career Goals */}
+                <div>
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Career Goals</h3>
+                  <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                    {profile?.career_goals || 'Not added yet'}
+                  </p>
+                </div>
+
+                {/* Skills */}
+                <div>
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Core Skills</h3>
+                  {profile?.skills ? (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {profile.skills.split(',').map((skill, idx) => (
+                        <span key={idx} className="bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded text-xs font-semibold shadow-sm">{skill.trim()}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500 italic">No skills listed</p>
+                  )}
+                </div>
+
+                {/* Interests */}
+                <div>
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Interests</h3>
+                  <p className="text-sm text-slate-700 font-medium">
+                    {profile?.interests || 'Not provided'}
+                  </p>
+                </div>
               </div>
-              <div className="w-full bg-indigo-200/50 rounded-full h-1.5 mb-2">
-                <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: '60%' }}></div>
+
+              <div className="pt-2 border-t border-slate-200">
+                <button
+                  onClick={() => nav('/edit-profile')}
+                  className="w-full py-2.5 bg-white text-slate-700 text-sm font-bold rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 hover:text-[var(--cardinal)] hover:border-slate-300 transition-all flex items-center justify-center gap-2 group"
+                >
+                  <Edit className="w-4 h-4 text-slate-400 group-hover:text-[var(--cardinal)] transition-colors" />
+                  Edit Profile
+                </button>
               </div>
-              <p className="text-xs text-indigo-700/80 font-medium mb-4">Intermediate (60%)</p>
-              <button className="w-full py-2 bg-white text-indigo-600 text-xs font-bold rounded-xl shadow-sm border border-indigo-100 hover:bg-indigo-50 hover:border-indigo-200 transition-all">
-                Complete Profile
-              </button>
             </div>
           </div>
 
@@ -204,18 +266,38 @@ export default function Dashboard() {
               </div>
               <div className="grid gap-3">
                 {recommendedConnections.map((alumni) => (
-                  <div key={alumni.id} className="flex items-center justify-between p-3.5 border border-slate-100 bg-slate-50/50 rounded-xl hover:border-[var(--cardinal)] hover:bg-white hover:shadow-sm transition-all cursor-pointer">
-                    <div className="flex items-center gap-4">
-                      <img src={alumni.image} alt={alumni.name} className="w-12 h-12 rounded-full object-cover shadow-sm border border-slate-200" />
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-sm">{alumni.name}</h3>
-                        <p className="text-sm text-slate-600 font-medium">{alumni.role}</p>
-                        <p className="text-xs text-slate-400 mt-0.5 font-medium">{alumni.branch} • '{alumni.year}</p>
+                  <div key={alumni.id} className="flex flex-col p-4 border border-slate-100 bg-slate-50/50 rounded-xl hover:border-[var(--cardinal)] hover:bg-white hover:shadow-sm transition-all shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <img src={alumni.image} alt={alumni.name} className="w-10 h-10 rounded-full object-cover shadow-sm border border-slate-200" />
+                        <div>
+                          <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                            {alumni.name}
+                            {alumni.linkedin && (
+                              <a href={alumni.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                                <Linkedin className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </h3>
+                          <p className="text-xs text-slate-600 font-medium">{alumni.role}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5 font-bold uppercase tracking-wide">{alumni.branch} • '{alumni.year}</p>
+                        </div>
                       </div>
                     </div>
-                    <button className="p-2.5 text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 rounded-full transition-colors hidden sm:block">
-                      <HeartHandshake className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        onClick={() => handleConnect(alumni.id)}
+                        className="flex-1 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-colors flex items-center justify-center gap-1.5 text-xs font-bold border border-blue-100 hover:border-blue-600 group"
+                      >
+                        <UserPlus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" /> Connect
+                      </button>
+                      <button
+                        onClick={() => handleMessage(nav, alumni.id)}
+                        className="flex-1 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-xs font-bold border border-slate-200"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" /> Message
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

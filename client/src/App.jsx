@@ -12,6 +12,8 @@ import Donation from './pages/Donation'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
+import EditProfile from './pages/EditProfile'
+import Messages from './pages/Messages'
 import AuthCallback from './pages/AuthCallback'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
@@ -48,6 +50,8 @@ export default function App() {
             element={<ProtectedRoute allow={["approved", "admin"]} />}
           >
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/resources" element={<Resources />} />
