@@ -116,14 +116,14 @@ export default function CareerPlaybooks() {
                   </div>
 
                   <h2
-                    className="text-xl md:text-2xl font-bold text-slate-900 leading-snug mb-2"
+                    className="text-xl md:text-2xl font-bold text-[#7d1111] leading-snug mb-2"
                     style={{ fontFamily: '"Playfair Display", serif' }}
                   >
                     {exp.title}
                   </h2>
-                  
+
                   {exp.subtitle && (
-                    <p className="text-slate-600 text-sm md:text-base leading-relaxed line-clamp-2 mb-4">
+                    <p className="text-slate-700 text-sm md:text-base leading-relaxed line-clamp-2 mb-4">
                       {exp.subtitle}
                     </p>
                   )}
