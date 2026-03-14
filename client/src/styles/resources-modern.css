@@ -1,0 +1,31 @@
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up { animation: fadeUp 560ms ease forwards; }
+.animate-fade-up-slow { animation: fadeUp 760ms ease forwards; }
+
+.card-img-scale {
+  transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.card-hover-shadow {
+  transition: box-shadow 0.28s ease, transform 0.28s ease;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(0, 0, 0, 0.03) 50%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  animation: pulse 1.6s infinite linear;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.85; }
+  50% { opacity: 0.55; }
+  100% { opacity: 0.85; }
+}
