@@ -143,7 +143,7 @@ export default function Login() {
 
         <div className="hidden md:flex relative overflow-hidden rounded-2xl border border-slate-200 min-h-[560px]">
           <img src="/iitropar.png" alt="IIT Ropar Campus" className="absolute inset-0 w-full h-full object-cover object-center" />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/55 to-[#6f0f12]/85" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0b2145]/58 via-[#123a73]/70 to-[#0f2c5a]/88" />
 
           <div className="relative z-10 flex flex-col justify-end p-8 text-white">
             <p className="text-xs uppercase tracking-[0.22em] text-white/80">IIT Ropar Alumni Network</p>

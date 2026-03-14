@@ -22,6 +22,7 @@ function formatDate(dateStr) {
 
 export default function ExperienceDetail() {
   const { id } = useParams()
+  const experienceId = (id || '').split('--')[0]
   const navigate = useNavigate()
   const { user, authStatus } = useAuth()
   const [exp, setExp] = useState(null)
@@ -31,21 +32,21 @@ export default function ExperienceDetail() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   useEffect(() => {
-    fetchExperience(id)
+    fetchExperience(experienceId)
       .then((data) => {
         setExp(data)
         setLikeCount(data.likes || 0)
       })
       .catch(() => navigate('/career-playbooks'))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [experienceId, navigate])
 
   const isAuthor = user && exp && user.id === exp.author_id
   const isAdmin = authStatus === 'admin'
 
   const handleDelete = async () => {
     try {
-      await deleteExperience(id)
+      await deleteExperience(experienceId)
       navigate('/career-playbooks')
     } catch (err) {
       console.error('Delete failed:', err)

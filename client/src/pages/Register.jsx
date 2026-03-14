@@ -168,7 +168,7 @@ export default function Register() {
                         : 'border-gray-300 hover:border-gray-400'
                         }`}
                     >
-                      <img src={role.image} alt={role.title} className="w-full h-20 rounded-md object-cover object-center mb-2" />
+                      <img src={role.image} alt={role.title} className="w-full aspect-[7/5] rounded-md object-cover object-center mb-2" />
                       <p className="font-semibold text-gray-900">{role.title}</p>
                       <p className="text-xs text-gray-600">{role.description}</p>
                     </button>
