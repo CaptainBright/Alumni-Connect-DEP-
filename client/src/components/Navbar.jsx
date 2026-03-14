@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 const publicMenus = [
   {
     label: 'Home',
-    to: '/',
+    to: 'http://localhost:5173/',
     icon: Home,
   },
   {
@@ -58,7 +58,7 @@ const publicMenus = [
 const loggedMenus = [
   {
     label: 'Home',
-    to: '/dashboard',
+    to: 'http://localhost:5173/',
     icon: Home,
   },
   ...publicMenus.slice(1),
@@ -67,6 +67,15 @@ const loggedMenus = [
 function DesktopMenu({ item }) {
   const Icon = item.icon
   if (item.to) {
+    const isExternal = item.to.startsWith('http')
+    if (isExternal) {
+      return (
+        <a href={item.to} className="nav-link inline-flex items-center gap-2">
+          {Icon && <Icon size={20} />}
+          <span>{item.label}</span>
+        </a>
+      )
+    }
     return (
       <Link to={item.to} className="nav-link inline-flex items-center gap-2">
         {Icon && <Icon size={20} />}
@@ -141,13 +150,13 @@ export default function Navbar() {
     <header className={`navbar ${isHomePublic ? 'fixed' : 'sticky'} top-0 left-0 right-0 z-[1000] ${showScrolledStyle ? 'navbar-scrolled' : ''} ${isHomePublic ? 'navbar-home' : ''}`}>
       <div className="navbar-shell">
         <div className="navbar-logo-section">
-          <Link to={isLoggedIn ? '/dashboard' : '/'} className="flex items-center gap-3">
+          <a href="http://localhost:5173/" className="flex items-center gap-3">
             <img src="/1.png" alt="IIT Ropar Alumni" className="w-[42px] h-[42px] rounded-full object-cover border border-white/25" />
             <div className="text-white leading-tight">
               <p className="text-[16px] font-semibold">IIT Ropar Alumni</p>
               <p className="text-xs text-white/85">Connect Portal</p>
             </div>
-          </Link>
+          </a>
         </div>
 
         <div className={`navbar-menu-section ${showScrolledStyle ? 'navbar-menu-scrolled' : ''}`}>
@@ -227,6 +236,14 @@ export default function Navbar() {
               </div>
               {menus.map((item) => {
                 if (item.to) {
+                  const isExternal = item.to.startsWith('http')
+                  if (isExternal) {
+                    return (
+                      <a key={item.label} href={item.to} className="block px-3 py-2 text-white rounded-lg hover:bg-[#2E3B5B]">
+                        {item.label}
+                      </a>
+                    )
+                  }
                   return (
                     <Link key={item.label} to={item.to} className="block px-3 py-2 text-white rounded-lg hover:bg-[#2E3B5B]">
                       {item.label}
