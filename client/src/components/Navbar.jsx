@@ -1,159 +1,263 @@
 import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Bell, ChevronDown, Home, Menu, MessageCircle, Search, User, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+
+const publicMenus = [
+  {
+    label: 'Home',
+    to: '/',
+    icon: Home,
+  },
+  {
+    label: 'Network',
+    items: [
+      { label: 'Alumni Directory', to: '/network' },
+      { label: 'Connections', to: '/network' },
+      { label: 'Recommended Alumni', to: '/network' },
+    ],
+  },
+  {
+    label: 'Jobs',
+    items: [
+      { label: 'Job Board', to: '/jobs' },
+      { label: 'Internships', to: '/jobs' },
+      { label: 'Startup Hiring', to: '/jobs' },
+    ],
+  },
+  {
+    label: 'Events',
+    items: [
+      { label: 'Upcoming Events', to: '/events' },
+      { label: 'Webinars', to: '/events' },
+      { label: 'Alumni Meetups', to: '/events' },
+    ],
+  },
+  {
+    label: 'Mentorship',
+    items: [
+      { label: 'Find Mentor', to: '/mentorship' },
+      { label: 'Mentorship Requests', to: '/mentorship' },
+      { label: 'My Mentors', to: '/mentorship' },
+    ],
+  },
+  {
+    label: 'Resources',
+    items: [
+      { label: 'Career Resources', to: '/resources' },
+      { label: 'Learning Materials', to: '/resources' },
+      { label: 'Interview Prep', to: '/career-playbooks' },
+    ],
+  },
+  {
+    label: 'About',
+    to: '/about',
+  },
+]
+
+const loggedMenus = [
+  {
+    label: 'Home',
+    to: '/dashboard',
+    icon: Home,
+  },
+  ...publicMenus.slice(1),
+]
+
+function DesktopMenu({ item }) {
+  const Icon = item.icon
+  if (item.to) {
+    return (
+      <Link to={item.to} className="nav-link inline-flex items-center gap-2">
+        {Icon && <Icon size={20} />}
+        <span>{item.label}</span>
+      </Link>
+    )
+  }
+
+  return (
+    <div className="relative group">
+      <button type="button" className="nav-link inline-flex items-center gap-2">
+        <span>{item.label}</span>
+        <ChevronDown size={16} />
+      </button>
+      <div className="dropdown-panel absolute left-0 top-full pt-[6px] w-64 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
+        <div className="rounded-xl border border-slate-600 bg-[#1f2a44] p-2">
+          {item.items.map((sub) => (
+            <Link key={sub.label} to={sub.to} className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-white/10">
+              {sub.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function Navbar() {
   const { authStatus, user, logout } = useAuth()
   const navigate = useNavigate()
-  const [featureMenuOpen, setFeatureMenuOpen] = React.useState(false)
-  const [profileMenuOpen, setProfileMenuOpen] = React.useState(false)
-  const featureMenuRef = React.useRef(null)
-  const profileMenuRef = React.useRef(null)
+  const location = useLocation()
+
+  const [isScrolled, setIsScrolled] = React.useState(false)
+  const [mobileOpen, setMobileOpen] = React.useState(false)
+  const [mobileAccordion, setMobileAccordion] = React.useState(null)
+  const [profileOpen, setProfileOpen] = React.useState(false)
+  const profileRef = React.useRef(null)
+
+  const isLoggedIn = authStatus !== 'guest' && authStatus !== 'loading'
+  const isHomePublic = !isLoggedIn && location.pathname === '/'
+  const showScrolledStyle = isScrolled || !isHomePublic
+  const menus = isLoggedIn ? loggedMenus : publicMenus
+  const displayName = user?.full_name || user?.name || user?.email || 'Alumni User'
+  const avatarUrl =
+    user?.avatar_url ||
+    user?.profile_image ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8C1515&color=fff`
+
+  React.useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 50)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  React.useEffect(() => {
+    const onOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onOutside)
+    return () => document.removeEventListener('mousedown', onOutside)
+  }, [])
 
   const handleLogout = async () => {
     await logout()
     navigate('/')
   }
 
-  const isMember = authStatus === 'approved' || authStatus === 'admin'
-  const isGuest = authStatus === 'guest'
-  const isLoggedIn = authStatus !== 'guest' && authStatus !== 'loading'
-  const showLoggedInLayout = isLoggedIn
-  const avatarUrl = user?.avatar_url || user?.profile_image || user?.photo_url || ''
-  const avatarInitial = (user?.full_name || user?.name || user?.email || 'U').charAt(0).toUpperCase()
-
-  React.useEffect(() => {
-    const onClickOutside = (event) => {
-      if (featureMenuRef.current && !featureMenuRef.current.contains(event.target)) {
-        setFeatureMenuOpen(false)
-      }
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
-        setProfileMenuOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [])
-
   return (
-    <header className="site-nav sticky top-0 z-50 border-b border-white/10">
-      <div className="grid md:grid-cols-[280px_1fr] min-h-[86px]">
-        {showLoggedInLayout ? (
-          <div ref={featureMenuRef} className="relative flex items-center px-5 py-3 border-r border-white/10">
-            <button
-              type="button"
-              onClick={() => setFeatureMenuOpen((v) => !v)}
-              className="inline-flex items-center gap-3 text-white hover:text-white/90 transition"
-            >
-              <span className="inline-flex flex-col gap-1">
-                <span className="block w-5 h-0.5 bg-white rounded" />
-                <span className="block w-5 h-0.5 bg-white rounded" />
-                <span className="block w-5 h-0.5 bg-white rounded" />
-              </span>
-              <span className="text-sm font-semibold tracking-wide">Features</span>
-            </button>
+    <header className={`navbar sticky top-0 z-[1000] ${showScrolledStyle ? 'navbar-scrolled' : ''} ${isHomePublic ? 'navbar-home' : ''}`}>
+      <div className="navbar-shell">
+        <div className="navbar-logo-section">
+          <Link to={isLoggedIn ? '/dashboard' : '/'} className="flex items-center gap-3">
+            <img src="/1.png" alt="IIT Ropar Alumni" className="w-[42px] h-[42px] rounded-full object-cover border border-white/25" />
+            <div className="text-white leading-tight">
+              <p className="text-[16px] font-semibold">IIT Ropar Alumni</p>
+              <p className="text-xs text-white/85">Connect Portal</p>
+            </div>
+          </Link>
+        </div>
 
-            {featureMenuOpen && (
-              <div className="absolute left-5 top-[72px] w-56 rounded-xl border border-white/15 bg-slate-900/95 backdrop-blur-xl p-2 shadow-2xl">
-                <Link to="/resources" className="block px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/10">Resources</Link>
-                <Link to="/career-playbooks" className="block px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/10">Career Playbooks</Link>
-                <Link to="/jobs" className="block px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/10">Jobs and Referrals</Link>
-                <Link to="/directory" className="block px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/10">Alumni Directory</Link>
+        <div className={`navbar-menu-section ${showScrolledStyle ? 'navbar-menu-scrolled' : ''}`}>
+          <div className="hidden lg:flex items-center gap-6">
+            <nav className="flex items-center gap-6 text-[15px] font-medium">
+              {menus.map((item) => (
+                <DesktopMenu key={item.label} item={item} />
+              ))}
+            </nav>
+
+            <div className="ml-auto flex items-center gap-3">
+              <div className="search-wrap">
+                <Search size={18} className="text-white/80" />
+                <input type="text" placeholder="Search alumni, jobs, mentors..." className="search-input" />
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="nav-brand flex items-center px-6 py-4">
-            <Link to="/" className="flex items-center gap-3">
-              <img src="/1.png" alt="IIT Ropar Alumni" className="w-9 h-9 rounded-full object-cover border border-white/25" />
-              <div className="text-white leading-tight">
-                <p className="text-xl font-semibold tracking-tight">IIT Ropar Alumni</p>
-                <p className="text-xs text-white/80">Connect Portal</p>
-              </div>
-            </Link>
-          </div>
-        )}
 
-        <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
-          <nav className="hidden lg:flex items-center gap-8 text-white font-semibold">
-            {!showLoggedInLayout && (
-              <Link to="/" className="nav-hover">Events</Link>
-            )}
-            <Link to="/about" className="nav-hover">About</Link>
-            <Link to="/resources" className="nav-hover">Reading and Resources</Link>
-            <Link to="/directory" className="nav-hover">Programs and Perks</Link>
-            <Link to="/jobs" className="nav-hover">Communities</Link>
-            <Link to="/donation" className="nav-hover">Volunteer</Link>
-          </nav>
+              {!isLoggedIn && (
+                <>
+                  <Link to="/login" className="px-4 py-2 rounded-lg border border-white/30 text-white hover:bg-[#2E3B5B] transition">
+                    Login
+                  </Link>
+                  <Link to="/register" className="px-4 py-2 rounded-lg bg-white text-slate-900 font-medium hover:bg-slate-100 transition">
+                    Register
+                  </Link>
+                </>
+              )}
 
-          <div className="hidden md:flex items-center gap-5 text-sm text-white/90 ml-auto">
-            <Link to="/directory" className="nav-hover">Alumni Directory</Link>
-            <a href="mailto:alumni@iitrpr.ac.in" className="nav-hover">Email</a>
-            {authStatus === 'pending' && <Link to="/pending-approval" className="text-amber-300">Approval Pending</Link>}
-            {isMember && <Link to="/dashboard" className="nav-hover">Dashboard</Link>}
-            <button className="px-4 py-1.5 rounded-full border border-white/45 hover:bg-white/10 transition">Search</button>
+              {isLoggedIn && (
+                <>
+                  <button type="button" className="icon-btn relative" aria-label="Notifications">
+                    <Bell size={20} />
+                    <span className="notif-badge">4</span>
+                  </button>
+                  <Link to="/messages" className="icon-btn" aria-label="Messages">
+                    <MessageCircle size={20} />
+                  </Link>
 
-            {isGuest && (
-              <>
-                <Link to="/login" className="px-4 py-1.5 rounded-full border border-white/35 text-white hover:bg-white/10 transition">
-                  Login
-                </Link>
-                <Link to="/register" className="px-4 py-1.5 rounded-full bg-white text-slate-900 font-semibold hover:bg-slate-100 transition">
-                  Register
-                </Link>
-              </>
-            )}
-
-            {isLoggedIn && (
-              <div ref={profileMenuRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setProfileMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 rounded-full border border-white/30 pl-1 pr-2 py-1 hover:bg-white/10 transition"
-                >
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Profile" className="w-8 h-8 rounded-full object-cover border border-white/25" />
-                  ) : (
-                    <span className="w-8 h-8 rounded-full bg-white/15 text-white text-sm font-bold flex items-center justify-center">{avatarInitial}</span>
-                  )}
-                  <svg className="w-4 h-4 text-white/85" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 011.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-                  </svg>
-                </button>
-
-                {profileMenuOpen && (
-                  <div className="absolute right-0 top-[46px] w-44 rounded-xl border border-white/15 bg-slate-900/95 backdrop-blur-xl p-2 shadow-2xl z-50">
-                    <Link to="/dashboard" className="block px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/10">Profile</Link>
-                    <Link to="/edit-profile" className="block px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/10">Settings</Link>
-                    <button onClick={handleLogout} className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-200 hover:bg-red-900/30">
-                      Logout
+                  <div ref={profileRef} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setProfileOpen((v) => !v)}
+                      className="flex items-center gap-2 px-1.5 py-1 rounded-full border border-white/30 hover:bg-[#2E3B5B] transition"
+                    >
+                      <img src={avatarUrl} alt="Profile" className="w-9 h-9 rounded-full object-cover" />
+                      <User size={18} className="text-white" />
                     </button>
+                    {profileOpen && (
+                      <div className="dropdown-panel absolute right-0 top-[46px] w-52 rounded-xl border border-slate-600 bg-[#1F2A44] p-2 z-50">
+                        <Link to="/dashboard" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">My Profile</Link>
+                        <Link to="/edit-profile" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Edit Profile</Link>
+                        <Link to="/jobs" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Applications</Link>
+                        <Link to="/jobs" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Saved Jobs</Link>
+                        <Link to="/edit-profile" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Settings</Link>
+                        <button onClick={handleLogout} className="w-full text-left rounded-lg px-3 py-2 text-sm text-red-200 hover:bg-red-900/30">Logout</button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="flex md:hidden items-center gap-2 ml-auto">
-            {isGuest ? (
-              <>
-                <Link to="/login" className="px-3 py-1.5 rounded-full border border-white/25 text-white">Login</Link>
-                <Link to="/register" className="px-3 py-1.5 rounded-full bg-white text-slate-900 font-semibold">Register</Link>
-              </>
-            ) : (
-              <>
-                <Link to="/dashboard" className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-white/30 bg-white/10">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
-                  ) : (
-                    <span className="text-white text-sm font-bold">{avatarInitial}</span>
-                  )}
-                </Link>
-                <button onClick={handleLogout} className="px-3 py-1.5 rounded-full border border-white/35 text-white">Logout</button>
-              </>
-            )}
+          <div className="lg:hidden flex items-center justify-between w-full">
+            <button type="button" onClick={() => setMobileOpen((v) => !v)} className="icon-btn" aria-label="Menu">
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            <button type="button" className="icon-btn" aria-label="Search">
+              <Search size={20} />
+            </button>
           </div>
+
+          {mobileOpen && (
+            <div className="lg:hidden mt-3 rounded-xl border border-slate-600 bg-[#1F2A44] p-3">
+              <div className="search-wrap mb-3">
+                <Search size={18} className="text-white/80" />
+                <input type="text" placeholder="Search alumni, jobs, mentors..." className="search-input" />
+              </div>
+              {menus.map((item) => {
+                if (item.to) {
+                  return (
+                    <Link key={item.label} to={item.to} className="block px-3 py-2 text-white rounded-lg hover:bg-[#2E3B5B]">
+                      {item.label}
+                    </Link>
+                  )
+                }
+                const isOpen = mobileAccordion === item.label
+                return (
+                  <div key={item.label}>
+                    <button
+                      type="button"
+                      onClick={() => setMobileAccordion((prev) => (prev === item.label ? null : item.label))}
+                      className="w-full flex items-center justify-between px-3 py-2 text-white rounded-lg hover:bg-[#2E3B5B]"
+                    >
+                      <span>{item.label}</span>
+                      <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isOpen && (
+                      <div className="pl-3">
+                        {item.items.map((sub) => (
+                          <Link key={sub.label} to={sub.to} className="block px-3 py-2 text-sm text-white/90 rounded-lg hover:bg-[#2E3B5B]">
+                            {sub.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
     </header>

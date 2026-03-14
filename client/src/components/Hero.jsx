@@ -2,28 +2,31 @@ import React from 'react'
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div className="relative h-[58vh] md:h-[66vh] lg:h-[74vh]">
-        <img src="/hero.jpg" alt="IIT Ropar campus" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 hero-overlay" />
-        <div className="absolute inset-0 flex items-center">
-          <div className="max-w-6xl mx-auto px-6 md:px-10 text-center">
-            <p className="home-copy uppercase tracking-[0.28em] text-[11px] sm:text-xs text-white/80">
-              IIT Ropar Alumni Connect
-            </p>
-            <h1 className="home-heading text-white text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mt-3">
-              Welcome to the Alumni Portal
-            </h1>
+    <section className="relative h-screen w-full overflow-hidden">
+      <img src="/hero.jpg" alt="IIT Ropar campus" className="absolute inset-0 w-full h-full object-cover object-center" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/60" />
 
-            <p className="home-copy mt-6 text-white text-base sm:text-lg md:text-xl max-w-4xl mx-auto leading-relaxed">
-              Connect with alumni, discover career opportunities, participate in mentorship, and stay informed about
-              events, initiatives, and academic progress across the IIT Ropar community.
-            </p>
+      <div className="relative z-10 h-full flex items-center justify-center px-6">
+        <div className="max-w-5xl text-center">
+          <p className="home-copy uppercase tracking-[0.28em] text-xs text-white/80">IIT Ropar Alumni Connect</p>
+          <h1 className="hero-title mt-4 font-bold text-white leading-tight text-5xl md:text-[64px]">
+            Welcome to the Alumni Portal
+          </h1>
+          <p className="home-copy mt-6 text-[18px] text-white/85 max-w-[700px] mx-auto leading-relaxed">
+            Connect with alumni, discover career opportunities, participate in mentorship, and stay informed about
+            events, initiatives, and academic progress across the IIT Ropar community.
+          </p>
 
-            <div className="mt-8 flex justify-center gap-3">
-              <a href="/directory" className="home-copy px-5 py-3 text-sm rounded-md cardinal-cta shadow-sm">Find Alumni</a>
-              <a href="/resources" className="home-copy px-5 py-3 text-sm rounded-md border border-white text-white">Explore Resources</a>
-            </div>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <a
+              href="/directory"
+              className="px-[22px] py-3 rounded-lg bg-[#8C1515] text-white font-medium hover:bg-[#6A0F0F] hover:-translate-y-[1px] hover:shadow-lg transition"
+            >
+              Find Alumni
+            </a>
+            <a href="/resources" className="px-6 py-3 rounded-lg border border-white text-white bg-transparent hover:bg-white/10 transition">
+              Explore Resources
+            </a>
           </div>
         </div>
       </div>

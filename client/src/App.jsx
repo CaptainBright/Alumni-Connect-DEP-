@@ -55,7 +55,10 @@ export default function App() {
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/directory" element={<Directory />} />
+            <Route path="/network" element={<Navigate to="/directory" replace />} />
             <Route path="/jobs" element={<Jobs />} />
+            <Route path="/events" element={<Navigate to="/resources" replace />} />
+            <Route path="/mentorship" element={<Navigate to="/resources" replace />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/career-playbooks" element={<CareerPlaybooks />} />
             <Route path="/career-playbooks/write" element={<WriteExperience />} />
