@@ -138,7 +138,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className={`navbar sticky top-0 z-[1000] ${showScrolledStyle ? 'navbar-scrolled' : ''} ${isHomePublic ? 'navbar-home' : ''}`}>
+    <header className={`navbar ${isHomePublic ? 'fixed' : 'sticky'} top-0 left-0 right-0 z-[1000] ${showScrolledStyle ? 'navbar-scrolled' : ''} ${isHomePublic ? 'navbar-home' : ''}`}>
       <div className="navbar-shell">
         <div className="navbar-logo-section">
           <Link to={isLoggedIn ? '/dashboard' : '/'} className="flex items-center gap-3">
