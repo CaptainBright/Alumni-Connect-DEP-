@@ -10,9 +10,28 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(cors({
-    origin: 'http://localhost:5173', // Your Vite frontend
-    credentials: true,               // MUST be true for cookies
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: (origin, callback) => {
+        const envOrigins = (process.env.CORS_ORIGINS || '')
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean);
+
+        const allowedOrigins = new Set([
+            'http://localhost:5173',
+            'http://localhost:5174',
+            'http://127.0.0.1:5173',
+            'http://127.0.0.1:5174',
+            ...envOrigins,
+        ]);
+
+        if (!origin || allowedOrigins.has(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
 
 // Routes

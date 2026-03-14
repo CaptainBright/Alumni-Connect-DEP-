@@ -6,19 +6,19 @@ const collections = [
     title: 'Career Playbooks',
     description: 'Interview prep, resume templates, referral strategy, and transition guides.',
     link: '/career-playbooks',
-    image: '/hero.jpg'
+    image: '/careerplaybooks.png'
   },
   {
     title: 'Higher Studies Toolkit',
     description: 'GRE/TOEFL resources, SOP examples, and alumni profiles from global universities.',
     link: '#',
-    image: '/image.png'
+    image: '/higherstudies.png'
   },
   {
     title: 'Startup and Research Hub',
     description: 'Founder stories, funding resources, and collaborative research opportunities.',
     link: '#',
-    image: '/hero.jpg'
+    image: '/startup.png'
   }
 ]
 
@@ -44,7 +44,7 @@ export default function Resources() {
       <section className="mt-8 grid md:grid-cols-3 gap-6">
         {collections.map((item) => (
           <article key={item.title} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
-            <img src={item.image} alt={item.title} className="w-full h-36 object-cover" />
+            <img src={item.image} alt={item.title} className="w-full h-40 object-cover object-center" />
             <div className="p-5">
               <h2 className="text-xl font-bold text-slate-900">{item.title}</h2>
               <p className="mt-2 text-sm text-slate-600">{item.description}</p>

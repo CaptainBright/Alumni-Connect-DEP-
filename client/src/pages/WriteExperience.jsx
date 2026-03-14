@@ -160,7 +160,7 @@ export default function WriteExperience() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title"
             required
-            className="w-full text-3xl md:text-4xl font-bold text-[var(--ink)] placeholder-slate-300 border-none outline-none bg-transparent"
+            className="w-full text-3xl md:text-4xl font-bold text-slate-900 placeholder-slate-400 border-none outline-none bg-transparent"
             style={{ fontFamily: '"Playfair Display", serif' }}
           />
         </div>
@@ -172,7 +172,7 @@ export default function WriteExperience() {
             value={subtitle}
             onChange={(e) => setSubtitle(e.target.value)}
             placeholder="Write a short description…"
-            className="w-full text-lg text-slate-600 placeholder-slate-300 border-none outline-none bg-transparent"
+            className="w-full text-lg text-slate-700 placeholder-slate-400 border-none outline-none bg-transparent"
             style={{ fontFamily: '"Source Sans 3", sans-serif' }}
           />
         </div>
