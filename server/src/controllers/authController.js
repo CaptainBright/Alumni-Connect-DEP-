@@ -15,6 +15,17 @@ const supabaseAdmin = supabase.createClient(supabaseUrl, supabaseServiceKey, {
     },
 });
 
+function createSupabaseAuthClient() {
+    // Use anon key for end-user sign-in so the admin client never gets user session state.
+    const authKey = process.env.SUPABASE_ANON_KEY || supabaseServiceKey;
+    return supabase.createClient(supabaseUrl, authKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+        },
+    });
+}
+
 // Configure Nodemailer Transporter
 // IMPORTANT: You need to set EMAIL_USER and EMAIL_PASS in your .env file
 const transporter = nodemailer.createTransport({
@@ -27,7 +38,6 @@ const transporter = nodemailer.createTransport({
 
 function normalizeRegistrationType(value) {
     const normalized = (value || '').toString().trim().toLowerCase();
-    if (normalized === 'admin') return 'Admin';
     if (normalized === 'student') return 'Student';
     return 'Alumni';
 }
@@ -41,9 +51,13 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Email and password required' });
         }
 
-        // Sign in using Supabase
-        const { data, error } = await supabaseAdmin.auth.signInWithPassword({
-            email,
+        const normalizedEmail = email.trim().toLowerCase();
+
+        // Sign in using a request-scoped auth client.
+        // This avoids mutating the shared service-role client session.
+        const supabaseAuth = createSupabaseAuthClient();
+        const { data, error } = await supabaseAuth.auth.signInWithPassword({
+            email: normalizedEmail,
             password
         });
 
@@ -66,7 +80,7 @@ exports.loginUser = async (req, res) => {
 
         const token = generateToken({
             id: user.id,
-            email: user.email,
+            email: normalizedEmail,
             role: profile.user_type,
             approval_status: profile.approval_status
         });
@@ -82,7 +96,7 @@ exports.loginUser = async (req, res) => {
             message: 'Login successful',
             user: {
                 id: user.id,
-                email: user.email,
+                email: normalizedEmail,
                 role: profile.user_type,
                 approval_status: profile.approval_status
             }
@@ -490,10 +504,12 @@ exports.verifyRegisterOtp = async (req, res) => {
         }
 
         // Verify OTP
+        const normalizedEmail = email.trim().toLowerCase();
+
         const { data: otps, error: dbError } = await supabaseAdmin
             .from('otps')
             .select('*')
-            .eq('email', email)
+            .eq('email', normalizedEmail)
             .order('created_at', { ascending: false })
             .limit(1);
 
@@ -513,7 +529,6 @@ exports.verifyRegisterOtp = async (req, res) => {
             return res.status(400).json({ message: 'OTP has expired' });
         }
 
-        const normalizedEmail = email.trim().toLowerCase();
         const userType = normalizeRegistrationType(userData?.userType);
         const isApproved = userType === 'Admin';
         const approvalStatus = isApproved ? 'APPROVED' : 'PENDING';
