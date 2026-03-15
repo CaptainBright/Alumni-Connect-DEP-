@@ -2,19 +2,15 @@ import React, { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
-import { uploadAvatar } from '../lib/upload'
+import UnifiedProfileCard from '../components/UnifiedProfileCard'
+import RecommendedAlumniSection from '../components/RecommendedAlumniSection'
 import { fetchExperiences } from '../api/experienceApi'
 import {
   Briefcase,
   Users,
-  CheckCircle2,
-  Clock,
   Calendar,
   Bell,
-  Sparkles,
-  Edit,
-  Camera,
-  Loader2
+  Sparkles
 } from 'lucide-react'
 
 const activityFeed = [
@@ -61,11 +57,8 @@ function slugify(text) {
 export default function Dashboard() {
   const [profile, setProfile] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
-  const [avatarUrl, setAvatarUrl] = useState(null)
-  const [uploading, setUploading] = useState(false)
   const [recentPosts, setRecentPosts] = useState([])
   const [loadingPosts, setLoadingPosts] = useState(true)
-  const fileInputRef = useRef(null)
   const { user } = useAuth()
   const nav = useNavigate()
 
@@ -81,7 +74,6 @@ export default function Dashboard() {
 
       if (!mounted) return
       setProfile(data || null)
-      if (data?.avatar_url) setAvatarUrl(data.avatar_url)
       setLoadingProfile(false)
     }
 
@@ -111,36 +103,6 @@ export default function Dashboard() {
 
   const isApproved = profile?.approval_status === 'APPROVED'
 
-  const handleAvatarUpload = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file || !user?.id) return
-
-    // Validate file type and size (max 2MB)
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    if (!validTypes.includes(file.type)) {
-      alert('Please select a valid image file (JPG, PNG, WebP, or GIF).')
-      return
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image must be smaller than 2 MB.')
-      return
-    }
-
-    try {
-      setUploading(true)
-      const publicUrl = await uploadAvatar(file, user.id)
-      // Append a cache-buster so the browser fetches the new image
-      setAvatarUrl(publicUrl + '?t=' + Date.now())
-    } catch (err) {
-      console.error('Avatar upload failed:', err)
-      alert('Failed to upload avatar. Please try again.')
-    } finally {
-      setUploading(false)
-      // Reset input so re-selecting the same file triggers onChange
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 w-full">
@@ -156,158 +118,7 @@ export default function Dashboard() {
 
           {/* 🔥 LEFT SIDEBAR (Sticky) - lg:col-span-3 */}
           <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6">
-
-            {/* Profile Card */}
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-              {/* Cover Banner */}
-              <div className="h-24 bg-gradient-to-r from-[var(--cardinal)] to-red-800"></div>
-
-              <div className="px-6 pb-6 relative">
-                {/* Profile Photo — click to upload */}
-                <div className="flex justify-center -mt-12 mb-4">
-                  <div
-                    className="relative h-24 w-24 rounded-full border-4 border-white bg-white overflow-hidden shadow-md cursor-pointer group"
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Click to change profile picture"
-                  >
-                    <img
-                      src={avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.full_name || 'User'}&backgroundColor=e2e8f0&textColor=475569`}
-                      alt="Profile"
-                      className="h-full w-full object-cover"
-                    />
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                      {uploading
-                        ? <Loader2 className="w-6 h-6 text-white animate-spin" />
-                        : <Camera className="w-6 h-6 text-white" />
-                      }
-                    </div>
-                    {/* Uploading overlay (always visible while uploading) */}
-                    {uploading && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
-                        <Loader2 className="w-6 h-6 text-white animate-spin" />
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    className="hidden"
-                    onChange={handleAvatarUpload}
-                    disabled={uploading}
-                  />
-                </div>
-
-                {/* Name & Details */}
-                <div className="text-center">
-                  <h2 className="text-lg font-bold text-slate-900 leading-tight">
-                    {loadingProfile ? 'Loading...' : (profile?.full_name || 'Member')}
-                  </h2>
-                  <p className="text-sm text-slate-500 font-medium mt-1">
-                    {profile?.branch || 'Branch'} • Class of {profile?.graduation_year || 'YYYY'}
-                  </p>
-
-                  {/* Status Badge */}
-                  <div className="mt-3.5 flex justify-center">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${isApproved
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}>
-                      {isApproved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                      {isApproved ? 'Approved Member' : 'Pending Approval'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="mt-6 pt-5 border-t border-slate-100 space-y-3.5">
-                  <div className="flex items-center justify-between text-sm hover:bg-slate-50 p-1.5 rounded-lg transition-colors cursor-pointer -mx-1.5">
-                    <span className="text-slate-500 font-medium px-1.5">Applications submitted</span>
-                    <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">3</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm hover:bg-slate-50 p-1.5 rounded-lg transition-colors cursor-pointer -mx-1.5">
-                    <span className="text-slate-500 font-medium px-1.5">Alumni connections</span>
-                    <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">12</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer -mx-1.5">
-                    <span className="text-slate-500 font-medium px-1.5">Job matches</span>
-                    <span className="font-bold text-[var(--cardinal)] bg-red-100 px-2 py-0.5 rounded-md">5</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Custom Details & Edit Profile */}
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col gap-5">
-              <div className="space-y-4">
-                {/* Department & Year (Always display, use placeholder if missing) */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Department</h3>
-                    <p className="text-sm text-slate-800 font-semibold">{profile?.branch || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Graduation</h3>
-                    <p className="text-sm text-slate-800 font-semibold">{profile?.graduation_year ? `'${profile.graduation_year.toString().slice(-2)}` : 'Not provided'}</p>
-                  </div>
-                </div>
-
-                {/* Company & Role */}
-                <div>
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Current Company</h3>
-                  <p className="text-sm text-slate-800 font-semibold">{profile?.company || 'Not added yet'}</p>
-                </div>
-
-                {/* Bio / About */}
-                <div>
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">About Me</h3>
-                  <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                    {profile?.bio || 'No bio added yet. Tell the community about yourself.'}
-                  </p>
-                </div>
-
-                {/* Career Goals */}
-                <div>
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Career Goals</h3>
-                  <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                    {profile?.career_goals || 'Not added yet'}
-                  </p>
-                </div>
-
-                {/* Skills */}
-                <div>
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Core Skills</h3>
-                  {profile?.skills ? (
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      {profile.skills.split(',').map((skill, idx) => (
-                        <span key={idx} className="bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded text-xs font-semibold shadow-sm">{skill.trim()}</span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-slate-500 italic">No skills listed</p>
-                  )}
-                </div>
-
-                {/* Interests */}
-                <div>
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Interests</h3>
-                  <p className="text-sm text-slate-700 font-medium">
-                    {profile?.interests || 'Not provided'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-slate-200">
-                <button
-                  onClick={() => nav('/edit-profile')}
-                  className="w-full py-2.5 bg-white text-slate-700 text-sm font-bold rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 hover:text-[var(--cardinal)] hover:border-slate-300 transition-all flex items-center justify-center gap-2 group"
-                >
-                  <Edit className="w-4 h-4 text-slate-400 group-hover:text-[var(--cardinal)] transition-colors" />
-                  Edit Profile
-                </button>
-              </div>
-            </div>
+            <UnifiedProfileCard profile={profile} loadingProfile={loadingProfile} />
           </div>
 
           {/* 🔥 CENTER CONTENT - lg:col-span-6 */}
@@ -359,27 +170,7 @@ export default function Dashboard() {
             </div>
 
             {/* Recommended Alumni */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900">Recommended Alumni</h2>
-              <p className="text-sm text-slate-500 mt-1 mb-4">People you may want to connect with in your domain.</p>
-              <div className="space-y-4">
-                {recommendedAlumni.map((alum) => (
-                  <article key={alum.id} className="flex items-center justify-between rounded-xl border border-slate-200 p-3 hover:bg-slate-50 transition">
-                    <div className="flex items-center gap-3">
-                      <img src={alum.avatar} alt={alum.name} className="w-11 h-11 rounded-full object-cover" />
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{alum.name}</p>
-                        <p className="text-xs text-slate-500">{alum.role}</p>
-                        <p className="text-xs text-slate-400">{alum.batch}</p>
-                      </div>
-                    </div>
-                    <button className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 text-slate-700 hover:border-[var(--cardinal)] hover:text-[var(--cardinal)] transition">
-                      Connect
-                    </button>
-                  </article>
-                ))}
-              </div>
-            </div>
+            <RecommendedAlumniSection currentProfile={profile} />
 
           </div>
 
