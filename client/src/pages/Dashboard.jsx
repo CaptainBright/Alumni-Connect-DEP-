@@ -87,7 +87,7 @@ export default function Dashboard() {
     fetchExperiences('all')
       .then((posts) => {
         if (!mounted) return
-        setRecentPosts((posts || []).slice(0, 6))
+        setRecentPosts((posts || []).slice(0, 3))
       })
       .catch(() => {
         if (!mounted) return
@@ -136,7 +136,7 @@ export default function Dashboard() {
               ) : recentPosts.length === 0 ? (
                 <div className="py-10 text-center text-slate-500 text-sm">No recent posts available.</div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   {recentPosts.map((post) => {
                     const textOnlyBody = (post.body || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
                     const shortDescription = post.subtitle || textOnlyBody.slice(0, 120)
