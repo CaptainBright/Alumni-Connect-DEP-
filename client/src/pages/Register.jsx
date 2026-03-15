@@ -15,12 +15,6 @@ const roleCards = [
     title: 'Alumni',
     description: 'Graduated alumni account',
     image: '/alumni.png'
-  },
-  {
-    value: 'admin',
-    title: 'Admin',
-    description: 'Portal management account',
-    image: '/iitropar.png'
   }
 ]
 
@@ -60,8 +54,8 @@ export default function Register() {
     if (!formData.fullName.trim()) return 'Full name is required'
     if (!userType) return 'Please select account type'
     if (!formData.email.trim()) return 'Email is required'
-    if (userType !== 'admin' && !formData.graduationYear.trim()) return 'Graduation year is required'
-    if (userType !== 'admin' && !formData.branch.trim()) return 'Branch is required'
+    if (!formData.graduationYear.trim()) return 'Graduation year is required'
+    if (!formData.branch.trim()) return 'Branch is required'
     if (!formData.agreedToTerms) return 'You must agree to terms and conditions'
     return null
   }
@@ -128,20 +122,11 @@ export default function Register() {
 
       await verifyRegisterOtp(payload)
 
-      // Success
-      if (normalizedType === 'Admin') {
-        nav('/login', {
-          state: {
-            info: 'Admin account created successfully. Please login using the main sign in page.'
-          }
-        })
-      } else {
-        nav('/login', {
-          state: {
-            info: 'Account created successfully. Your profile is pending admin approval.'
-          }
-        })
-      }
+      nav('/login', {
+        state: {
+          info: 'Account created successfully. Your profile is pending admin approval.'
+        }
+      })
 
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Verification failed')
@@ -172,19 +157,18 @@ export default function Register() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Account Type *
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {roleCards.map((role) => (
                     <button
                       type="button"
                       key={role.value}
                       onClick={() => setUserType(role.value)}
-                      className={`text-left rounded-lg border p-3 transition ${
-                        userType === role.value
-                          ? 'border-[var(--cardinal)] bg-red-50'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
+                      className={`text-left rounded-lg border p-3 transition ${userType === role.value
+                        ? 'border-[var(--cardinal)] bg-red-50'
+                        : 'border-gray-300 hover:border-gray-400'
+                        }`}
                     >
-                      <img src={role.image} alt={role.title} className="w-full h-16 rounded-md object-cover mb-2" />
+                      <img src={role.image} alt={role.title} className="w-full aspect-[7/5] rounded-md object-cover object-center mb-2" />
                       <p className="font-semibold text-gray-900">{role.title}</p>
                       <p className="text-xs text-gray-600">{role.description}</p>
                     </button>
@@ -216,60 +200,56 @@ export default function Register() {
                 />
               </div>
 
-              {userType !== 'admin' && (
-                <>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      name="graduationYear"
-                      placeholder="Graduation year"
-                      value={formData.graduationYear}
-                      onChange={handleChange}
-                      className="px-4 py-2 border rounded-lg"
-                    />
+              <div className="grid md:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  name="graduationYear"
+                  placeholder="Graduation year"
+                  value={formData.graduationYear}
+                  onChange={handleChange}
+                  className="px-4 py-2 border rounded-lg"
+                />
 
-                    <input
-                      type="text"
-                      name="branch"
-                      placeholder="Branch"
-                      value={formData.branch}
-                      onChange={handleChange}
-                      className="px-4 py-2 border rounded-lg"
-                    />
-                  </div>
+                <input
+                  type="text"
+                  name="branch"
+                  placeholder="Branch"
+                  value={formData.branch}
+                  onChange={handleChange}
+                  className="px-4 py-2 border rounded-lg"
+                />
+              </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      name="company"
-                      placeholder="Company"
-                      value={formData.company}
-                      onChange={handleChange}
-                      className="px-4 py-2 border rounded-lg"
-                    />
+              <div className="grid md:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  name="company"
+                  placeholder="Company"
+                  value={formData.company}
+                  onChange={handleChange}
+                  className="px-4 py-2 border rounded-lg"
+                />
 
-                    <input
-                      type="text"
-                      name="role"
-                      placeholder="Role"
-                      value={formData.role}
-                      onChange={handleChange}
-                      className="px-4 py-2 border rounded-lg"
-                    />
-                  </div>
+                <input
+                  type="text"
+                  name="role"
+                  placeholder="Role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="px-4 py-2 border rounded-lg"
+                />
+              </div>
 
-                  <div>
-                    <input
-                      type="url"
-                      name="linkedIn"
-                      placeholder="LinkedIn URL"
-                      value={formData.linkedIn}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border rounded-lg"
-                    />
-                  </div>
-                </>
-              )}
+              <div>
+                <input
+                  type="url"
+                  name="linkedIn"
+                  placeholder="LinkedIn URL"
+                  value={formData.linkedIn}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <input

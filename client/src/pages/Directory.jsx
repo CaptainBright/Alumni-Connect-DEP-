@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { Users, Search, Filter } from 'lucide-react'
 import AlumniCard from '../components/AlumniCard'
 import SearchBar from '../components/SearchBar'
 import Pagination from '../components/Pagination'
@@ -13,7 +14,8 @@ export default function Directory() {
   const [totalPages, setTotalPages] = useState(1)
   const [yearOptions, setYearOptions] = useState(['All'])
   const [filters, setFilters] = useState({ year: 'All', branch: 'All' })
-  const pageSize = 12
+  // Show fewer items since cards are bigger
+  const pageSize = 9
 
   const offset = useMemo(() => (page - 1) * pageSize, [page])
 
@@ -53,57 +55,103 @@ export default function Directory() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 md:px-10 py-10">
-      <section className="bg-white rounded-2xl border border-slate-200 p-8">
-        <h2 className="text-3xl font-bold text-slate-900">Alumni Directory</h2>
-        <p className="mt-2 text-slate-600">Search by name, company, branch, and graduation year.</p>
-      </section>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
-        <aside className="lg:col-span-1 space-y-4">
-          <div className="bg-white p-4 rounded-xl border border-slate-200">
-            <SearchBar value={q} onChange={setQ} placeholder="Search people, company, branch" />
+    <div className="min-h-screen bg-slate-50 py-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header section */}
+        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm mb-8 relative">
+          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+             <Users className="w-64 h-64 text-[var(--cardinal)]" />
           </div>
-          <div className="bg-white p-4 rounded-xl border border-slate-200">
-            <h4 className="font-semibold text-slate-900">Filters</h4>
-            <div className="mt-3 flex flex-col gap-2">
-              <select
-                value={filters.year}
-                onChange={(e) => {
-                  setPage(1)
-                  setFilters({ ...filters, year: e.target.value })
-                }}
-                className="p-2 border border-slate-300 rounded"
-              >
-                {yearOptions.map((year) => <option key={year}>{year}</option>)}
-              </select>
-              <select
-                value={filters.branch}
-                onChange={(e) => {
-                  setPage(1)
-                  setFilters({ ...filters, branch: e.target.value })
-                }}
-                className="p-2 border border-slate-300 rounded"
-              >
-                {branchOptions.map((branch) => <option key={branch}>{branch}</option>)}
-              </select>
-            </div>
+          <div className="relative z-10 p-8 sm:p-10 md:p-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: '"Playfair Display", serif' }}>
+              Alumni <span className="text-[var(--cardinal)]">Directory</span>
+            </h1>
+            <p className="mt-4 text-lg text-slate-600 max-w-2xl leading-relaxed">
+              Reconnect with fellow graduates, explore exciting career paths, and expand your professional network across the globe.
+            </p>
           </div>
-        </aside>
+        </div>
 
-        <main className="lg:col-span-3">
-          {alumni.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-600">
-              No matching alumni found.
+        <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-12 gap-8 items-start">
+          {/* Sidebar Filters */}
+          <aside className="lg:col-span-1 xl:col-span-3 space-y-6 lg:sticky lg:top-8">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                 <Search className="w-5 h-5 text-slate-500" />
+                 <h4 className="text-base font-bold text-slate-900">Search</h4>
+              </div>
+              <SearchBar value={q} onChange={setQ} placeholder="Name, company, branch..." />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {alumni.map((member) => <AlumniCard key={member.id} alumni={member} />)}
-            </div>
-          )}
 
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-        </main>
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-2 mb-5">
+                 <Filter className="w-5 h-5 text-slate-500" />
+                 <h4 className="text-base font-bold text-slate-900">Filters</h4>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Graduation Year</label>
+                  <div className="relative">
+                    <select
+                      value={filters.year}
+                      onChange={(e) => {
+                        setPage(1)
+                        setFilters({ ...filters, year: e.target.value })
+                      }}
+                      className="w-full appearance-none px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:bg-white transition-all cursor-pointer"
+                    >
+                      {yearOptions.map((year) => <option key={year} value={year}>{year === 'All' ? 'All Years' : year}</option>)}
+                    </select>
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Branch / Department</label>
+                  <div className="relative">
+                    <select
+                      value={filters.branch}
+                      onChange={(e) => {
+                        setPage(1)
+                        setFilters({ ...filters, branch: e.target.value })
+                      }}
+                      className="w-full appearance-none px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)] focus:bg-white transition-all cursor-pointer"
+                    >
+                      {branchOptions.map((branch) => <option key={branch} value={branch}>{branch === 'All' ? 'All Branches' : branch}</option>)}
+                    </select>
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Grid Content */}
+          <main className="lg:col-span-3 xl:col-span-9">
+            {alumni.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center flex flex-col items-center justify-center">
+                <Users className="w-16 h-16 text-slate-200 mb-4" />
+                <h3 className="text-lg font-bold text-slate-700 mb-1">No alumni found</h3>
+                <p className="text-slate-500">Try adjusting your search criteria or filters.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {alumni.map((member) => <AlumniCard key={member.id} alumni={member} />)}
+              </div>
+            )}
+
+            {totalPages > 1 && (
+              <div className="mt-10">
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              </div>
+            )}
+          </main>
+        </div>
       </div>
     </div>
   )

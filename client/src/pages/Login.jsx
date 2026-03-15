@@ -141,40 +141,20 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="hidden md:flex flex-col justify-between bg-white/80 border border-slate-200 rounded-2xl p-8">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-4xl font-bold hero-title text-slate-900 mb-2">Alumni Connect</h3>
-              <p className="text-slate-700 leading-relaxed text-lg">
-                Connect with fellow IIT Ropar alumni, discover career opportunities, and stay engaged with the community.
-              </p>
-            </div>
+        <div className="hidden md:flex relative overflow-hidden rounded-2xl border border-slate-200 min-h-[560px]">
+          <img src="/iitropar.png" alt="IIT Ropar Campus" className="absolute inset-0 w-full h-full object-cover object-center" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0b2145]/58 via-[#123a73]/70 to-[#0f2c5a]/88" />
 
-            <div className="rounded-xl overflow-hidden border border-slate-200">
-              <img src="/iitropar.png" alt="IIT Ropar Campus" className="w-full h-52 object-cover" />
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <div>
-                  <p className="font-semibold text-gray-900">Network globally</p>
-                  <p className="text-sm text-gray-600">Connect with alumni worldwide</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div>
-                  <p className="font-semibold text-gray-900">Career growth</p>
-                  <p className="text-sm text-gray-600">Access jobs and mentorship</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div>
-                  <p className="font-semibold text-gray-900">Learn and share</p>
-                  <p className="text-sm text-gray-600">Participate in events and knowledge sharing</p>
-                </div>
-              </div>
+          <div className="relative z-10 flex flex-col justify-end p-8 text-white">
+            <p className="text-xs uppercase tracking-[0.22em] text-white/80">IIT Ropar Alumni Network</p>
+            <h3 className="text-4xl font-bold hero-title mt-2">Alumni Connect</h3>
+            <p className="leading-relaxed text-lg text-white/95 mt-3">
+              Connect with fellow IIT Ropar alumni, discover career opportunities, and stay engaged with the community.
+            </p>
+            <div className="mt-6 space-y-2 text-sm text-white/90">
+              <p>Network globally with alumni chapters and mentors.</p>
+              <p>Access curated jobs, referrals, and mentorship support.</p>
+              <p>Stay informed with events, programs, and official updates.</p>
             </div>
           </div>
         </div>

@@ -1,0 +1,473 @@
+/* ── Career Playbooks — Medium-inspired styles ── */
+
+/* Article body reading width */
+.article-body {
+  max-width: 720px;
+  margin: 0 auto;
+  font-family: "Source Sans 3", "Outfit", Georgia, serif;
+  font-size: 1.125rem;
+  line-height: 1.85;
+  color: #1a1a2e;
+}
+
+.article-body h1,
+.article-body h2,
+.article-body h3 {
+  font-family: "Playfair Display", serif;
+  color: var(--ink);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.article-body h1 {
+  font-size: 2rem;
+}
+
+.article-body h2 {
+  font-size: 1.5rem;
+}
+
+.article-body h3 {
+  font-size: 1.25rem;
+}
+
+.article-body p {
+  margin-bottom: 1.25rem;
+}
+
+.article-body blockquote {
+  border-left: 4px solid var(--cardinal);
+  margin: 1.5rem 0;
+  padding: 0.75rem 1.25rem;
+  background: rgba(140, 21, 21, 0.04);
+  font-style: italic;
+  color: #444;
+}
+
+.article-body code {
+  background: #f1f1f4;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.92em;
+}
+
+.article-body pre {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+}
+
+.article-body pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.article-body ul,
+.article-body ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.article-body li {
+  margin-bottom: 0.35rem;
+}
+
+.article-body a {
+  color: var(--cardinal);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.article-body img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1.25rem 0;
+}
+
+.article-body hr {
+  border: none;
+  border-top: 1px solid #e2e2e8;
+  margin: 2rem 0;
+}
+
+/* Category pill */
+.category-pill {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.category-pill.interview {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.category-pill.job {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.category-pill.internship {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.category-pill.advice {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+/* Feed card hover */
+.playbook-card {
+  transition: transform 300ms ease, box-shadow 300ms ease;
+}
+
+.playbook-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+}
+
+/* Reading time helper */
+.reading-meta {
+  font-family: "Source Sans 3", "Outfit", sans-serif;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+/* Write page textarea auto-grow */
+.write-body-textarea {
+  font-family: "Source Sans 3", "Outfit", Georgia, serif;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  resize: vertical;
+  min-height: 320px;
+}
+
+/* Like button pulse */
+@keyframes like-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.25);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.like-pop {
+  animation: like-pop 350ms ease;
+}
+
+/* Floating write button */
+.floating-write-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 40;
+  background: var(--cardinal);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 14px 28px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(140, 21, 21, 0.35);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.floating-write-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(140, 21, 21, 0.45);
+}
+
+/* Filter pills */
+.filter-pill {
+  padding: 6px 18px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1.5px solid #cbd5e1;
+  background: white;
+  color: #475569;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.filter-pill:hover {
+  border-color: var(--cardinal);
+  color: var(--cardinal);
+}
+
+.filter-pill.active {
+  background: var(--cardinal);
+  border-color: var(--cardinal);
+  color: white;
+}
+
+/* Cover image overlay for card */
+.card-cover-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+
+.card-cover-wrapper img {
+  transition: transform 500ms ease;
+}
+
+.playbook-card:hover .card-cover-wrapper img {
+  transform: scale(1.04);
+}
+
+/* ═══════════════════════════════════════════════
+   Rich Text Editor (TipTap)
+   ═══════════════════════════════════════════════ */
+
+/* Wrapper */
+.rich-editor-wrapper {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  transition: border-color 200ms ease;
+}
+
+.rich-editor-wrapper:focus-within {
+  border-color: var(--cardinal);
+  box-shadow: 0 0 0 3px rgba(140, 21, 21, 0.08);
+}
+
+/* ── Fixed Toolbar ── */
+.rich-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  position: relative;
+  z-index: 2;
+}
+
+.rich-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rich-toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+  margin: 0 6px;
+}
+
+.rich-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 150ms ease;
+}
+
+.rich-tool-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.rich-tool-btn.active {
+  background: var(--cardinal);
+  color: white;
+}
+
+/* ── Bubble Menu (floating on selection) ── */
+.bubble-menu {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 4px 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.bubble-menu .rich-tool-btn {
+  width: 30px;
+  height: 30px;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  border-radius: 5px;
+}
+
+.bubble-menu .rich-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.bubble-menu .rich-tool-btn.active {
+  background: var(--cardinal);
+  color: white;
+}
+
+.bubble-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 3px;
+}
+
+/* ── Editor Content Area ── */
+.rich-editor-content .tiptap {
+  min-height: 350px;
+  padding: 24px 28px;
+  outline: none;
+  font-family: "Source Sans 3", "Outfit", Georgia, serif;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #0f172a !important;
+}
+
+/* Force dark text on all basic blocks in case of Tailwind resets */
+.rich-editor-content .tiptap p,
+.rich-editor-content .tiptap h1,
+.rich-editor-content .tiptap h2,
+.rich-editor-content .tiptap h3,
+.rich-editor-content .tiptap li {
+  color: #0f172a !important;
+}
+
+.rich-editor-content .tiptap>*+* {
+  margin-top: 0.75em;
+}
+
+/* Placeholder */
+.rich-editor-content .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #94a3b8;
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
+}
+
+/* Headings inside editor */
+.rich-editor-content .tiptap h1 {
+  font-family: "Playfair Display", serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 1.5rem;
+}
+
+.rich-editor-content .tiptap h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 1.25rem;
+}
+
+.rich-editor-content .tiptap h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 1rem;
+}
+
+/* Blockquote inside editor */
+.rich-editor-content .tiptap blockquote {
+  border-left: 4px solid var(--cardinal);
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
+  background: rgba(140, 21, 21, 0.04);
+  font-style: italic;
+  color: #444;
+}
+
+/* Lists */
+.rich-editor-content .tiptap ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+
+.rich-editor-content .tiptap ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+
+.rich-editor-content .tiptap li {
+  margin-bottom: 0.25rem;
+}
+
+/* Code */
+.rich-editor-content .tiptap code {
+  background: #f1f1f4;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.88em;
+  font-family: 'Fira Code', 'Consolas', monospace;
+}
+
+.rich-editor-content .tiptap pre {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.88rem;
+}
+
+.rich-editor-content .tiptap pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+/* Images inside editor */
+.rich-editor-content .tiptap img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+  cursor: default;
+}
+
+/* Links inside editor */
+.rich-editor-content .tiptap a,
+.editor-link {
+  color: var(--cardinal);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* Horizontal rule */
+.rich-editor-content .tiptap hr {
+  border: none;
+  border-top: 2px solid #e2e8f0;
+  margin: 2rem 0;
+}

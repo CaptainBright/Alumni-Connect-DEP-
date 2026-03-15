@@ -1,63 +1,65 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
-import { uploadAvatar } from '../lib/upload'
+import UnifiedProfileCard from '../components/UnifiedProfileCard'
+import RecommendedAlumniSection from '../components/RecommendedAlumniSection'
+import { fetchExperiences } from '../api/experienceApi'
 import {
   Briefcase,
   Users,
-  BookOpen,
-  HeartHandshake,
-  CheckCircle2,
-  Clock,
   Calendar,
   Bell,
-  Sparkles,
-  MapPin,
-  ChevronRight,
-  TrendingUp,
-  Award,
-  Camera,
-  Loader2
+  Sparkles
 } from 'lucide-react'
 
-// Mock Data
-const quickActions = [
-  { title: 'Browse Directory', path: '/directory', desc: 'Find alumni by branch and batch.', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-  { title: 'Open Job Board', path: '/jobs', desc: 'Apply to internships and full-time roles.', icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50' },
-  { title: 'Access Resources', path: '/resources', desc: 'Use career and learning resources.', icon: BookOpen, color: 'text-orange-600', bg: 'bg-orange-50' },
-  { title: 'Volunteer and Donate', path: '/donation', desc: 'Support IIT Ropar initiatives.', icon: HeartHandshake, color: 'text-green-600', bg: 'bg-green-50' }
-]
-
-const upcomingEvents = [
-  { id: 1, title: 'Annual Alumni Meet 2026', date: 'March 15, 2026', location: 'New Delhi', type: 'Networking' },
-  { id: 2, title: 'Tech Career Fair', date: 'April 2, 2026', location: 'Virtual', type: 'Careers' }
-]
-
-const recommendedConnections = [
-  { id: 1, name: 'Priya Sharma', role: 'SDE-2 at Google', branch: 'CSE', year: '2020', image: 'https://i.pravatar.cc/150?img=47' },
-  { id: 2, name: 'Rahul Verma', role: 'Product Manager at Microsoft', branch: 'EE', year: '2019', image: 'https://i.pravatar.cc/150?img=11' },
-]
-
-const featuredJobs = [
-  { id: 1, title: 'Frontend Engineer', company: 'TechCorp', type: 'Full-time', location: 'Bangalore' },
-  { id: 2, title: 'Data Science Intern', company: 'Analytics Inc', type: 'Internship', location: 'Remote' }
-]
-
 const activityFeed = [
-  { id: 1, type: 'status', title: 'Application Update', desc: 'Your application to TechCorp is under review.', time: '2h ago', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', borderLeft: 'border-l-blue-500' },
-  { id: 2, type: 'job', title: 'New Job Match', desc: 'SDE at Google aligns with your profile.', time: '5h ago', icon: Sparkles, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', borderLeft: 'border-l-emerald-500' },
-  { id: 3, type: 'invite', title: 'Mentorship Invite', desc: 'Priya Sharma sent you a connection request.', time: '1d ago', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', borderLeft: 'border-l-purple-500' },
-  { id: 4, type: 'event', title: 'Event Reminder', desc: 'Annual Alumni Meet requires RSVP.', time: '1d ago', icon: Calendar, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100', borderLeft: 'border-l-orange-500' }
+  { id: 1, type: 'status', title: 'Application Update', desc: 'Your application to TechCorp is under review.', time: '2h ago', icon: Briefcase, color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-200', borderLeft: 'border-l-slate-400' },
+  { id: 2, type: 'job', title: 'New Job Match', desc: 'SDE at Google aligns with your profile.', time: '5h ago', icon: Sparkles, color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-200', borderLeft: 'border-l-slate-400' },
+  { id: 3, type: 'invite', title: 'Mentorship Invite', desc: 'Priya Sharma sent you a connection request.', time: '1d ago', icon: Users, color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-200', borderLeft: 'border-l-slate-400' },
+  { id: 4, type: 'event', title: 'Event Reminder', desc: 'Annual Alumni Meet requires RSVP.', time: '1d ago', icon: Calendar, color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-200', borderLeft: 'border-l-slate-400' }
 ]
+
+const recommendedAlumni = [
+  { id: 1, name: 'Priya Sharma', role: 'Senior Product Manager, Microsoft', batch: 'CSE 2018', avatar: 'https://ui-avatars.com/api/?name=Priya+Sharma&background=8C1515&color=fff' },
+  { id: 2, name: 'Arjun Verma', role: 'Software Engineer, Google', batch: 'EE 2019', avatar: 'https://ui-avatars.com/api/?name=Arjun+Verma&background=1F2A44&color=fff' },
+  { id: 3, name: 'Neha Gupta', role: 'Research Scientist, NVIDIA', batch: 'ME 2017', avatar: 'https://ui-avatars.com/api/?name=Neha+Gupta&background=334155&color=fff' },
+]
+
+const eventSchedule = [
+  { id: 1, title: 'Alumni Mentorship Webinar', date: 'Mar 20, 2026', time: '7:00 PM IST' },
+  { id: 2, title: 'Startup Networking Circle', date: 'Mar 25, 2026', time: '6:30 PM IST' },
+  { id: 3, title: 'Annual Alumni Meet Planning', date: 'Apr 2, 2026', time: '5:00 PM IST' },
+]
+
+function formatPostDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function readingTime(text) {
+  const words = (text || '').replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length
+  const mins = Math.max(1, Math.ceil(words / 200))
+  return `${mins} min read`
+}
+
+function slugify(text) {
+  return (text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+}
 
 export default function Dashboard() {
   const [profile, setProfile] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
-  const [avatarUrl, setAvatarUrl] = useState(null)
-  const [uploading, setUploading] = useState(false)
-  const fileInputRef = useRef(null)
-  const { user, authStatus } = useAuth()
+  const [recentPosts, setRecentPosts] = useState([])
+  const [loadingPosts, setLoadingPosts] = useState(true)
+  const { user } = useAuth()
   const nav = useNavigate()
 
   useEffect(() => {
@@ -66,13 +68,12 @@ export default function Dashboard() {
       if (!user?.id) return
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, email, user_type, approval_status, branch, graduation_year, company, avatar_url')
+        .select('full_name, email, user_type, approval_status, branch, graduation_year, company, bio, skills, interests, linkedin, avatar_url')
         .eq('id', user.id)
         .maybeSingle()
 
       if (!mounted) return
       setProfile(data || null)
-      if (data?.avatar_url) setAvatarUrl(data.avatar_url)
       setLoadingProfile(false)
     }
 
@@ -80,37 +81,27 @@ export default function Dashboard() {
     return () => { mounted = false }
   }, [user?.id])
 
+  useEffect(() => {
+    let mounted = true
+    setLoadingPosts(true)
+    fetchExperiences('all')
+      .then((posts) => {
+        if (!mounted) return
+        setRecentPosts((posts || []).slice(0, 3))
+      })
+      .catch(() => {
+        if (!mounted) return
+        setRecentPosts([])
+      })
+      .finally(() => {
+        if (!mounted) return
+        setLoadingPosts(false)
+      })
+
+    return () => { mounted = false }
+  }, [])
+
   const isApproved = profile?.approval_status === 'APPROVED'
-
-  const handleAvatarUpload = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file || !user?.id) return
-
-    // Validate file type and size (max 2MB)
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    if (!validTypes.includes(file.type)) {
-      alert('Please select a valid image file (JPG, PNG, WebP, or GIF).')
-      return
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image must be smaller than 2 MB.')
-      return
-    }
-
-    try {
-      setUploading(true)
-      const publicUrl = await uploadAvatar(file, user.id)
-      // Append a cache-buster so the browser fetches the new image
-      setAvatarUrl(publicUrl + '?t=' + Date.now())
-    } catch (err) {
-      console.error('Avatar upload failed:', err)
-      alert('Failed to upload avatar. Please try again.')
-    } finally {
-      setUploading(false)
-      // Reset input so re-selecting the same file triggers onChange
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
@@ -118,7 +109,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            Welcome back, {loadingProfile ? 'Member' : (profile?.full_name?.split(' ')[0] || 'Member')}! 👋
+            Welcome back, {loadingProfile ? 'Member' : (profile?.full_name?.split(' ')[0] || 'Member')}!
           </h1>
           <p className="text-slate-500 mt-1.5 font-medium">Here's what's currently happening in your alumni network.</p>
         </div>
@@ -127,222 +118,78 @@ export default function Dashboard() {
 
           {/* 🔥 LEFT SIDEBAR (Sticky) - lg:col-span-3 */}
           <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6">
-
-            {/* Profile Card */}
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-              {/* Cover Banner */}
-              <div className="h-24 bg-gradient-to-r from-[var(--cardinal)] to-red-800"></div>
-
-              <div className="px-6 pb-6 relative">
-                {/* Profile Photo — click to upload */}
-                <div className="flex justify-center -mt-12 mb-4">
-                  <div
-                    className="relative h-24 w-24 rounded-full border-4 border-white bg-white overflow-hidden shadow-md cursor-pointer group"
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Click to change profile picture"
-                  >
-                    <img
-                      src={avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.full_name || 'User'}&backgroundColor=e2e8f0&textColor=475569`}
-                      alt="Profile"
-                      className="h-full w-full object-cover"
-                    />
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                      {uploading
-                        ? <Loader2 className="w-6 h-6 text-white animate-spin" />
-                        : <Camera className="w-6 h-6 text-white" />
-                      }
-                    </div>
-                    {/* Uploading overlay (always visible while uploading) */}
-                    {uploading && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
-                        <Loader2 className="w-6 h-6 text-white animate-spin" />
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    className="hidden"
-                    onChange={handleAvatarUpload}
-                    disabled={uploading}
-                  />
-                </div>
-
-                {/* Name & Details */}
-                <div className="text-center">
-                  <h2 className="text-lg font-bold text-slate-900 leading-tight">
-                    {loadingProfile ? 'Loading...' : (profile?.full_name || 'Member')}
-                  </h2>
-                  <p className="text-sm text-slate-500 font-medium mt-1">
-                    {profile?.branch || 'Branch'} • Class of {profile?.graduation_year || 'YYYY'}
-                  </p>
-
-                  {/* Status Badge */}
-                  <div className="mt-3.5 flex justify-center">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${isApproved
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}>
-                      {isApproved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                      {isApproved ? 'Approved Member' : 'Pending Approval'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="mt-6 pt-5 border-t border-slate-100 space-y-3.5">
-                  <div className="flex items-center justify-between text-sm hover:bg-slate-50 p-1.5 rounded-lg transition-colors cursor-pointer -mx-1.5">
-                    <span className="text-slate-500 font-medium px-1.5">Applications submitted</span>
-                    <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">3</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm hover:bg-slate-50 p-1.5 rounded-lg transition-colors cursor-pointer -mx-1.5">
-                    <span className="text-slate-500 font-medium px-1.5">Alumni connections</span>
-                    <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">12</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer -mx-1.5">
-                    <span className="text-slate-500 font-medium px-1.5">Job matches</span>
-                    <span className="font-bold text-[var(--cardinal)] bg-red-100 px-2 py-0.5 rounded-md">5</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Profile Strength / Optional Extra */}
-            <div className="bg-gradient-to-br from-indigo-50 to-blue-50/50 rounded-2xl border border-indigo-100/60 p-5 shadow-sm">
-              <div className="flex items-center gap-2.5 mb-3">
-                <Award className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-semibold text-slate-900 text-sm">Profile Strength</h3>
-              </div>
-              <div className="w-full bg-indigo-200/50 rounded-full h-1.5 mb-2">
-                <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: '60%' }}></div>
-              </div>
-              <p className="text-xs text-indigo-700/80 font-medium mb-4">Intermediate (60%)</p>
-              <button className="w-full py-2 bg-white text-indigo-600 text-xs font-bold rounded-xl shadow-sm border border-indigo-100 hover:bg-indigo-50 hover:border-indigo-200 transition-all">
-                Complete Profile
-              </button>
-            </div>
+            <UnifiedProfileCard profile={profile} loadingProfile={loadingProfile} />
           </div>
 
           {/* 🔥 CENTER CONTENT - lg:col-span-6 */}
           <div className="lg:col-span-6 space-y-6">
 
-            {/* Quick Actions Grid */}
+            {/* Recent Posts */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-[var(--cardinal)]" />
-                Quick Actions
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {quickActions.map((action) => (
-                  <button
-                    key={action.title}
-                    onClick={() => nav(action.path)}
-                    className="flex items-start gap-3.5 p-4 border border-slate-100 rounded-xl hover:border-[var(--cardinal)] hover:shadow-md transition-all text-left bg-slate-50/50 hover:bg-white group"
-                  >
-                    <div className={`p-2.5 rounded-xl ${action.bg} ${action.color} group-hover:scale-110 transition-transform`}>
-                      <action.icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-sm">{action.title}</h3>
-                      <p className="text-xs text-slate-500 mt-1 font-medium leading-snug">{action.desc}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              <h2 className="text-lg font-bold text-slate-900">Recent Posts</h2>
+              <p className="text-sm text-slate-500 mt-1 mb-5">Latest insights and career guidance from alumni.</p>
+
+              {loadingPosts ? (
+                <div className="py-12 text-center">
+                  <div className="inline-block w-7 h-7 border-4 border-slate-300 border-t-[var(--cardinal)] rounded-full animate-spin" />
+                </div>
+              ) : recentPosts.length === 0 ? (
+                <div className="py-10 text-center text-slate-500 text-sm">No recent posts available.</div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {recentPosts.map((post) => {
+                    const textOnlyBody = (post.body || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+                    const shortDescription = post.subtitle || textOnlyBody.slice(0, 120)
+
+                    return (
+                      <article
+                        key={post.id}
+                        className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition duration-200"
+                      >
+                        <img
+                          src={post.cover_image || '/careerplaybooks.png'}
+                          alt={post.title}
+                          className="w-full h-[150px] object-cover rounded-[10px] mb-3"
+                        />
+                        <h3 className="text-base font-bold text-slate-900 leading-snug">{post.title}</h3>
+                        <p className="text-sm text-slate-600 mt-2 leading-relaxed" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {shortDescription}
+                        </p>
+                        <div className="mt-3 text-xs text-slate-500">
+                          <p>Author: {post.author_name || 'Alumni Member'}</p>
+                          <p>{formatPostDate(post.created_at)} - {readingTime(post.body)}</p>
+                        </div>
+                        <Link to={`/career-playbooks/${post.id}--${slugify(post.title)}`} className="inline-block mt-3 text-sm font-semibold text-[var(--cardinal)] hover:text-[var(--cardinal-hover)]">
+                          Read More <span aria-hidden="true">→</span>
+                        </Link>
+                      </article>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Recommended Alumni */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-[var(--cardinal)]" />
-                  Recommended Alumni
-                </h2>
-                <button className="text-sm font-semibold text-[var(--cardinal)] hover:text-red-700 flex items-center gap-0.5">
-                  See all <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="grid gap-3">
-                {recommendedConnections.map((alumni) => (
-                  <div key={alumni.id} className="flex items-center justify-between p-3.5 border border-slate-100 bg-slate-50/50 rounded-xl hover:border-[var(--cardinal)] hover:bg-white hover:shadow-sm transition-all cursor-pointer">
-                    <div className="flex items-center gap-4">
-                      <img src={alumni.image} alt={alumni.name} className="w-12 h-12 rounded-full object-cover shadow-sm border border-slate-200" />
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-sm">{alumni.name}</h3>
-                        <p className="text-sm text-slate-600 font-medium">{alumni.role}</p>
-                        <p className="text-xs text-slate-400 mt-0.5 font-medium">{alumni.branch} • '{alumni.year}</p>
-                      </div>
-                    </div>
-                    <button className="p-2.5 text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 rounded-full transition-colors hidden sm:block">
-                      <HeartHandshake className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-6">
-              {/* Upcoming Events */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-[var(--cardinal)]" />
-                    Upcoming Events
-                  </h2>
-                </div>
-                <div className="space-y-4 flex-1">
-                  {upcomingEvents.map((event) => (
-                    <div key={event.id} className="group relative pl-4 border-l-2 border-slate-200 hover:border-[var(--cardinal)] transition-colors cursor-pointer">
-                      <p className="text-xs font-bold text-[var(--cardinal)] mb-1 uppercase tracking-wider">{event.date}</p>
-                      <h3 className="font-bold text-slate-900 text-sm leading-snug">{event.title}</h3>
-                      <div className="flex items-center gap-3 mt-2 text-xs text-slate-500 font-medium">
-                        <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {event.location}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button className="mt-4 w-full py-2 bg-slate-50 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-100 transition-colors">
-                  View full calendar
-                </button>
-              </div>
-
-              {/* Featured Opportunities */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-[var(--cardinal)]" />
-                    Opportunities
-                  </h2>
-                </div>
-                <div className="space-y-3 flex-1">
-                  {featuredJobs.map((job) => (
-                    <div key={job.id} className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 hover:border-[var(--cardinal)] hover:bg-white transition-all cursor-pointer">
-                      <h3 className="font-bold text-slate-900 text-sm line-clamp-1">{job.title}</h3>
-                      <p className="text-xs text-slate-600 mt-1 font-medium">{job.company}</p>
-                      <div className="flex items-center gap-2 mt-2.5">
-                        <span className="px-2 py-1 bg-white border border-slate-200 text-slate-600 rounded bg-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
-                          {job.type}
-                        </span>
-                        <span className="px-2 py-1 bg-white border border-slate-200 text-slate-600 rounded bg-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
-                          {job.location}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button className="mt-4 w-full py-2 bg-slate-50 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-100 transition-colors">
-                  Browse Job Board
-                </button>
-              </div>
-            </div>
+            <RecommendedAlumniSection currentProfile={profile} />
 
           </div>
 
           {/* 🔥 RIGHT SMART PANEL (Dynamic Feed) - lg:col-span-3 */}
-          <div className="lg:col-span-3 lg:sticky lg:top-8">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[calc(100vh-8rem)]">
+          <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <h2 className="text-lg font-bold text-slate-900">Event Schedule</h2>
+              <p className="text-sm text-slate-500 mt-1 mb-4">Upcoming community activities.</p>
+              <div className="space-y-3">
+                {eventSchedule.map((event) => (
+                  <article key={event.id} className="rounded-xl border border-slate-200 p-3 bg-slate-50/70">
+                    <p className="text-sm font-semibold text-slate-900">{event.title}</p>
+                    <p className="text-xs text-slate-500 mt-1">{event.date} - {event.time}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[calc(100vh-28rem)] min-h-[420px]">
 
               {/* Header */}
               <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white rounded-t-2xl z-10">
