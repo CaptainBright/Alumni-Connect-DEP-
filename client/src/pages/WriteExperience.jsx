@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { createExperience, updateExperience, fetchExperience } from '../api/experienceApi'
+import { uploadCoverImage } from '../lib/upload'
 import RichTextEditor from '../components/RichTextEditor'
 import '../styles/careerPlaybooks.css'
 
@@ -22,8 +23,10 @@ export default function WriteExperience() {
   const [category, setCategory] = useState('advice')
   const [tags, setTags] = useState('')
   const [coverImage, setCoverImage] = useState('')
+  const [uploadingCover, setUploadingCover] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const coverInputRef = useRef(null)
   const [loadingEdit, setLoadingEdit] = useState(!!editId)
 
   // Load existing experience if editing
@@ -44,6 +47,34 @@ export default function WriteExperience() {
       })
       .finally(() => setLoadingEdit(false))
   }, [editId])
+
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    if (!validTypes.includes(file.type)) {
+      setError('Please select a valid image file (JPG, PNG, WebP, or GIF).')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be smaller than 5 MB.')
+      return
+    }
+
+    try {
+      setUploadingCover(true)
+      setError('')
+      const publicUrl = await uploadCoverImage(file)
+      setCoverImage(publicUrl)
+    } catch (err) {
+      console.error('Cover upload failed:', err)
+      setError('Failed to upload cover image. Please try again.')
+    } finally {
+      setUploadingCover(false)
+      if (coverInputRef.current) coverInputRef.current.value = ''
+    }
+  }
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault()
@@ -121,18 +152,72 @@ export default function WriteExperience() {
         {/* ── Cover Image ── */}
         <div className="mb-6">
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            Cover Image URL <span className="text-slate-400 font-normal">(optional)</span>
+            Cover Image <span className="text-slate-400 font-normal">(optional)</span>
           </label>
-          <input
-            type="url"
-            value={coverImage}
-            onChange={(e) => setCoverImage(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-[var(--cardinal)] focus:ring-1 focus:ring-[var(--cardinal)] outline-none transition text-sm"
-          />
-          {coverImage && (
-            <img src={coverImage} alt="Cover preview" className="mt-3 w-full h-40 object-cover rounded-lg border border-slate-100" />
-          )}
+          <div className="flex flex-col gap-3">
+            {!coverImage ? (
+              <div 
+                onClick={() => !uploadingCover && coverInputRef.current?.click()}
+                className={`w-full h-32 md:h-40 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center bg-slate-50 text-slate-500 transition cursor-pointer hover:bg-slate-100 hover:border-slate-400 ${uploadingCover ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {uploadingCover ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-6 h-6 border-2 border-slate-300 border-t-[var(--cardinal)] rounded-full animate-spin" />
+                    <span className="text-sm font-medium">Uploading...</span>
+                  </div>
+                ) : (
+                  <>
+                    <svg className="w-8 h-8 mb-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm font-medium">Click to upload cover image</span>
+                    <span className="text-xs text-slate-400 mt-1">JPG, PNG, WebP or GIF (max 5MB)</span>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="relative group rounded-xl overflow-hidden border border-slate-200">
+                <img 
+                  src={coverImage} 
+                  alt="Cover preview" 
+                  className={`w-full h-48 md:h-64 object-cover ${uploadingCover ? 'opacity-50' : ''}`} 
+                />
+                
+                {/* Overlay actions */}
+                <div className="absolute inset-x-0 bottom-0 top-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {uploadingCover ? (
+                    <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => coverInputRef.current?.click()}
+                        className="px-4 py-2 bg-white text-slate-800 text-sm font-semibold rounded-lg hover:bg-slate-100 transition shadow-sm"
+                      >
+                        Change Image
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCoverImage('')}
+                        className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition shadow-sm"
+                      >
+                        Remove
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={handleCoverUpload}
+              disabled={uploadingCover}
+            />
+          </div>
         </div>
 
         {/* ── Category ── */}

@@ -33,3 +33,22 @@ export async function uploadAvatar(file, userId) {
 
   return publicUrl
 }
+
+export async function uploadCoverImage(file) {
+  // Generate a unique file name to prevent overwriting
+  const ext = file.name.split('.').pop()
+  const uniqueId = Math.random().toString(36).substring(2, 15)
+  const timestamp = Date.now()
+  const filePath = `covers/${uniqueId}-${timestamp}.${ext}`
+
+  // Upload the file to the 'avatars' Supabase Storage bucket
+  const { error } = await supabase.storage
+    .from('avatars')
+    .upload(filePath, file, { upsert: false })
+
+  if (error) throw error
+
+  // Get the public URL
+  const { data } = supabase.storage.from('avatars').getPublicUrl(filePath)
+  return data.publicUrl
+}
