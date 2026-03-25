@@ -4,6 +4,8 @@ import { Users, Search, Filter } from 'lucide-react'
 import AlumniCard from '../components/AlumniCard'
 import SearchBar from '../components/SearchBar'
 import Pagination from '../components/Pagination'
+import { useAuth } from '../hooks/useAuth'
+import { useConnections } from '../hooks/useConnections'
 
 const branchOptions = ['All', 'Computer Science', 'Electrical', 'Mechanical', 'Civil', 'Chemical']
 
@@ -16,6 +18,9 @@ export default function Directory() {
   const [filters, setFilters] = useState({ year: 'All', branch: 'All' })
   // Show fewer items since cards are bigger
   const pageSize = 9
+
+  const { user } = useAuth();
+  const { connectionStatusMap, sendConnectionRequest } = useConnections();
 
   const offset = useMemo(() => (page - 1) * pageSize, [page])
 
@@ -141,7 +146,15 @@ export default function Directory() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {alumni.map((member) => <AlumniCard key={member.id} alumni={member} />)}
+                {alumni.map((member) => (
+                  <AlumniCard 
+                    key={member.id} 
+                    alumni={member} 
+                    currentUserId={user?.id}
+                    connectionStatus={connectionStatusMap[member.id]}
+                    onConnect={() => sendConnectionRequest(member.id)}
+                  />
+                ))}
               </div>
             )}
 

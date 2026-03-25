@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import UnifiedProfileCard from '../components/UnifiedProfileCard'
 import RecommendedAlumniSection from '../components/RecommendedAlumniSection'
+import ConnectionRequests from '../components/network/ConnectionRequests'
 import { fetchExperiences } from '../api/experienceApi'
 import {
   Briefcase,
@@ -176,6 +177,8 @@ export default function Dashboard() {
 
           {/* 🔥 RIGHT SMART PANEL (Dynamic Feed) - lg:col-span-3 */}
           <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6">
+            <ConnectionRequests />
+
             <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
               <h2 className="text-lg font-bold text-slate-900">Event Schedule</h2>
               <p className="text-sm text-slate-500 mt-1 mb-4">Upcoming community activities.</p>

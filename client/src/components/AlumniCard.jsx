@@ -1,6 +1,10 @@
 import React from 'react'
+import { UserPlus, UserCheck, Clock } from 'lucide-react'
 
-export default function AlumniCard({ alumni }) {
+export default function AlumniCard({ alumni, currentUserId, connectionStatus, onConnect }) {
+  const isSelf = currentUserId === alumni?.id;
+  const isPending = connectionStatus === 'PENDING_SENT' || connectionStatus === 'PENDING_RECEIVED';
+  const isConnected = connectionStatus === 'ACCEPTED';
   return (
     <article className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group flex flex-col h-full">
       {/* Cover Banner */}
@@ -54,9 +58,26 @@ export default function AlumniCard({ alumni }) {
               LinkedIn
             </a>
           )}
-          <button className="flex-1 py-2 text-sm font-semibold rounded-lg bg-[var(--cardinal)] text-white hover:opacity-90 transition">
-            Connect
-          </button>
+          
+          {!isSelf && (
+            <button 
+              onClick={(!isPending && !isConnected) ? onConnect : undefined}
+              disabled={isPending || isConnected}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg flex items-center justify-center gap-1.5 transition overflow-hidden text-ellipsis whitespace-nowrap ${
+                isConnected ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : isPending ? 'bg-slate-100 text-slate-500 border border-slate-200'
+                : 'bg-[var(--cardinal)] text-white hover:opacity-90'
+              }`}
+            >
+              {isConnected ? (
+                <><UserCheck className="w-4 h-4" /> Connected</>
+              ) : isPending ? (
+                <><Clock className="w-4 h-4" /> Pending</>
+              ) : (
+                <><UserPlus className="w-4 h-4" /> Connect</>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </article>
