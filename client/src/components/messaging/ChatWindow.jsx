@@ -5,7 +5,7 @@ import MessageBubble from './MessageBubble';
 import { messagingApi } from '../../api/messagingApi';
 import { useRealtimeMessages } from '../../hooks/useRealtimeMessages';
 
-export default function ChatWindow({ conversation, currentUser, onConversationCreated }) {
+export default function ChatWindow({ conversation, currentUser, onConversationCreated, onMessagesRead }) {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [sending, setSending] = useState(false);
   const scrollRef = useRef(null);
@@ -33,6 +33,14 @@ export default function ChatWindow({ conversation, currentUser, onConversationCr
       try {
         const data = await messagingApi.fetchMessages(conversation.id);
         if (mounted) setMessages(data);
+        
+        // Instantly mark messages as read and clear local sidebar notification counts
+        await messagingApi.markAsRead(conversation.id, currentUser.id);
+        if (onMessagesRead) {
+          onMessagesRead(conversation.id);
+        }
+        // Dispatch global event for Navbar to update the notification bubble
+        window.dispatchEvent(new Event('messagesRead'));
       } catch (err) {
         console.error('Failed to load chat history', err);
       } finally {
@@ -108,6 +116,15 @@ export default function ChatWindow({ conversation, currentUser, onConversationCr
     }
   };
 
+  const handleReactMessage = async (messageId, reaction) => {
+    try {
+      await messagingApi.reactToMessage(messageId, reaction);
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, reaction } : m));
+    } catch (err) {
+      console.error('Failed to react to message', err);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#f8fbff]">
       
@@ -168,8 +185,10 @@ export default function ChatWindow({ conversation, currentUser, onConversationCr
                   key={msg.id} 
                   message={msg} 
                   isOwnMessage={msg.sender_id === currentUser?.id} 
+                  currentUserAvatar={currentUser?.avatar_url || currentUser?.profile_image}
                   onEdit={handleEditMessage}
                   onDelete={handleDeleteMessage}
+                  onReact={handleReactMessage}
                 />
               ))
             )}
@@ -177,18 +196,8 @@ export default function ChatWindow({ conversation, currentUser, onConversationCr
         )}
       </div>
 
-      {/* Persistent Quick Replies */}
-      <div className="bg-[#f8fbff] px-4 pb-2 pt-1 flex gap-2 overflow-x-auto scrollbar-hide flex-shrink-0 border-t border-slate-100">
-        <button onClick={() => handleSendMessage('I would love to request formal mentorship and guidance from you.')} className="flex-shrink-0 px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-[11px] font-bold hover:bg-indigo-600 hover:text-white transition-colors shadow-sm">🤝 Request Mentorship</button>
-        <button onClick={() => handleSendMessage('Hi! Can we schedule a quick mentorship call?')} className="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-full text-[11px] font-bold hover:border-[var(--cardinal)] hover:text-[var(--cardinal)] transition-colors shadow-sm">👋 Schedule a call</button>
-        <button onClick={() => handleSendMessage('Hello, could you please review my resume when you get a chance?')} className="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-full text-[11px] font-bold hover:border-[var(--cardinal)] hover:text-[var(--cardinal)] transition-colors shadow-sm">📄 Review Resume</button>
-        <button onClick={() => handleSendMessage('I would love your guidance on Interview Prep.')} className="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-full text-[11px] font-bold hover:border-[var(--cardinal)] hover:text-[var(--cardinal)] transition-colors shadow-sm">🎯 Interview Prep</button>
-        <button onClick={() => handleSendMessage('Hi, I am interested in learning more about the culture at your company.')} className="flex-shrink-0 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-full text-[11px] font-bold hover:border-[var(--cardinal)] hover:text-[var(--cardinal)] transition-colors shadow-sm">🏢 Company Culture</button>
-      </div>
-
       {/* Input Area */}
       <ChatInput onSendMessage={handleSendMessage} isUploading={sending} />
-
     </div>
   );
 }

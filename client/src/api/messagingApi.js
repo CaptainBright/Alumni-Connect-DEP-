@@ -172,5 +172,48 @@ export const messagingApi = {
       
     if (error) throw error;
     return true;
+  },
+
+  // 8. Add or update an emoji reaction
+  async reactToMessage(messageId, reaction) {
+    const { error } = await supabase
+      .from('messages')
+      .update({ reaction })
+      .eq('id', messageId);
+      
+    if (error) throw error;
+    return true;
+  },
+
+  // 9. Get total unread conversations count for a user
+  async getUnreadMessageCount(userId) {
+    if (!userId) return 0;
+    
+    // Safety check: Explicitly retrieve all conversations this user is part of
+    const { data: userConvs, error: convError } = await supabase
+      .from('conversations')
+      .select('id')
+      .or(`participant_one.eq.${userId},participant_two.eq.${userId}`);
+      
+    if (convError || !userConvs || userConvs.length === 0) return 0;
+    
+    // Isolate those specific conversation IDs
+    const myConvoIds = userConvs.map(c => c.id);
+
+    // Fetch unread messages specifically within the user's threads
+    const { data, error } = await supabase
+      .from('messages')
+      .select('conversation_id')
+      .in('conversation_id', myConvoIds)
+      .neq('sender_id', userId)
+      .eq('is_read', false);
+      
+    if (error) {
+      console.error('Error fetching global unread count:', error);
+      return 0;
+    }
+    // Count unique conversation IDs
+    const uniqueThreads = new Set(data.map(m => m.conversation_id));
+    return uniqueThreads.size;
   }
 };

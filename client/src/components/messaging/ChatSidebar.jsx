@@ -1,10 +1,49 @@
-import React, { useState } from 'react';
-import { Search, Filter, MessageSquareCode } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Search, Filter, MessageSquareCode, Camera, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabaseClient';
 
-export default function ChatSidebar({ conversations, activeConversationId, onSelectConversation }) {
+export default function ChatSidebar({ conversations, activeConversationId, onSelectConversation, currentUser }) {
   const [searchTerm, setSearchTerm] = useState('');
-
   const [activeTab, setActiveTab] = useState('All');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUser) return;
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatars/${currentUser.id}-${Date.now()}.${fileExt}`;
+  
+      const { error: uploadError } = await supabase.storage
+        .from('message_attachments')
+        .upload(fileName, file);
+        
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('message_attachments')
+        .getPublicUrl(fileName);
+        
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', currentUser.id);
+        
+      if (updateError) throw updateError;
+      
+      window.location.reload();
+      
+    } catch (err) {
+      console.error('Failed to upload avatar', err);
+      alert('Failed to upload profile picture. Try again.');
+    } finally {
+      setUploading(false);
+      e.target.value = null;
+    }
+  };
 
   const filteredConversations = conversations.filter(c => {
     const term = searchTerm.toLowerCase();
@@ -22,13 +61,46 @@ export default function ChatSidebar({ conversations, activeConversationId, onSel
     return true;
   });
 
+  const displayName = currentUser?.full_name || currentUser?.name || currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'User';
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white">
+      {/* Current User Profile Widget */}
+      {currentUser && (
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-3">
+            <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()} title="Change Profile Picture">
+              <img 
+                src={currentUser.avatar_url || currentUser.profile_image || `https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`} 
+                alt="My Profile" 
+                className="w-11 h-11 rounded-full object-cover border-2 border-white shadow-sm group-hover:brightness-75 transition-all" 
+              />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="w-5 h-5 text-white drop-shadow-md" />
+              </div>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/png, image/jpeg, image/jpg" 
+                onChange={handleAvatarUpload}
+                disabled={uploading}
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-extrabold text-slate-900">{displayName}</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{currentUser.user_type || 'User'}</span>
+            </div>
+          </div>
+          {uploading && <Loader2 className="w-5 h-5 text-[var(--cardinal)] animate-spin" />}
+        </div>
+      )}
+
       {/* Header & Search */}
-      <div className="p-4 border-b border-slate-200 bg-white">
+      <div className="p-4 border-b border-slate-200">
         <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center justify-between">
           Messages
-          <button className="text-slate-400 hover:text-[var(--cardinal)]">
+          <button className="text-slate-400 hover:text-[var(--cardinal)] transition-colors">
             <Filter className="w-5 h-5" />
           </button>
         </h2>

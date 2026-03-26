@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Bell, ChevronDown, Home, Menu, MessageCircle, Search, User, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { messagingApi } from '../api/messagingApi'
 
 const publicMenus = [
   {
@@ -110,9 +111,10 @@ export default function Navbar() {
 
   const [isScrolled, setIsScrolled] = React.useState(false)
   const [mobileOpen, setMobileOpen] = React.useState(false)
-  const [mobileAccordion, setMobileAccordion] = React.useState(null)
-  const [profileOpen, setProfileOpen] = React.useState(false)
-  const profileRef = React.useRef(null)
+  const [mobileAccordion, setMobileAccordion] = useState(null)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(0)
+  const profileRef = useRef(null)
 
   const isLoggedIn = authStatus !== 'guest' && authStatus !== 'loading'
   const isHomePublic = !isLoggedIn && location.pathname === '/'
@@ -131,7 +133,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const onOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false)
@@ -140,6 +142,20 @@ export default function Navbar() {
     document.addEventListener('mousedown', onOutside)
     return () => document.removeEventListener('mousedown', onOutside)
   }, [])
+
+  // Fetch unread messages count on load and on custom read events
+  useEffect(() => {
+    const fetchUnread = () => {
+      if (isLoggedIn && user?.id) {
+        messagingApi.getUnreadMessageCount(user.id).then(count => setUnreadMessages(count));
+      }
+    };
+    
+    fetchUnread();
+    
+    window.addEventListener('messagesRead', fetchUnread);
+    return () => window.removeEventListener('messagesRead', fetchUnread);
+  }, [isLoggedIn, user?.id, location.pathname]);
 
   const handleLogout = async () => {
     await logout()
@@ -190,8 +206,11 @@ export default function Navbar() {
                     <Bell size={20} />
                     <span className="notif-badge">4</span>
                   </button>
-                  <Link to="/messages" className="icon-btn" aria-label="Messages">
+                  <Link to="/messages" className="icon-btn relative" aria-label="Messages">
                     <MessageCircle size={20} />
+                    {unreadMessages > 0 && (
+                      <span className="notif-badge">{unreadMessages > 99 ? '99+' : unreadMessages}</span>
+                    )}
                   </Link>
 
                   <div ref={profileRef} className="relative">

@@ -98,7 +98,10 @@ exports.loginUser = async (req, res) => {
                 id: user.id,
                 email: normalizedEmail,
                 role: profile.user_type,
-                approval_status: profile.approval_status
+                approval_status: profile.approval_status,
+                full_name: profile.full_name,
+                avatar_url: profile.avatar_url,
+                profile_image: profile.profile_image
             }
         });
 
@@ -180,7 +183,10 @@ exports.loginWithSupabaseToken = async (req, res) => {
                 id: user.id,
                 email: user.email,
                 role: currentProfile.user_type,
-                approval_status: currentProfile.approval_status
+                approval_status: currentProfile.approval_status,
+                full_name: currentProfile.full_name,
+                avatar_url: currentProfile.avatar_url,
+                profile_image: currentProfile.profile_image
             }
         });
 
@@ -216,7 +222,10 @@ exports.getMe = async (req, res) => {
                 id: profile.id,
                 email: profile.email,
                 role: profile.user_type,
-                approval_status: profile.approval_status
+                approval_status: profile.approval_status,
+                full_name: profile.full_name,
+                avatar_url: profile.avatar_url,
+                profile_image: profile.profile_image
             }
         });
 

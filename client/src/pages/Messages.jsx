@@ -49,47 +49,8 @@ export default function Messages() {
           return acc;
         }, []);
         
-        const sampleAlumni = [
-          {
-            id: 'sample-1',
-            isPlaceholder: true,
-            participant_one: user.id,
-            participant_two: 'sample-1',
-            participant: {
-              id: 'sample-1',
-              full_name: 'Priya Patel',
-              company: 'Google',
-              role: 'Software Engineer',
-              avatar_url: 'https://i.pravatar.cc/150?img=43',
-              user_type: 'Alumni'
-            },
-            lastMessageAt: new Date().toISOString(),
-            lastMessage: 'Let me know if you need help!',
-            unreadCount: 0,
-            status: 'Sample'
-          },
-          {
-            id: 'sample-2',
-            isPlaceholder: true,
-            participant_one: user.id,
-            participant_two: 'sample-2',
-            participant: {
-              id: 'sample-2',
-              full_name: 'Rahul Desai',
-              company: 'Atlassian',
-              role: 'Senior SDE',
-              avatar_url: 'https://i.pravatar.cc/150?img=11',
-              user_type: 'Alumni'
-            },
-            lastMessageAt: new Date(Date.now() - 86400000).toISOString(),
-            lastMessage: 'Sure, I can review your resume.',
-            unreadCount: 0,
-            status: 'Sample'
-          }
-        ];
-        
         if (mounted) {
-          setConversations([...activeConvs, ...placeholders, ...sampleAlumni]);
+          setConversations([...activeConvs, ...placeholders]);
         }
       } catch (err) {
         console.error('Failed to load messaging data', err);
@@ -120,6 +81,7 @@ export default function Messages() {
             conversations={conversations} 
             activeConversationId={activeConversationId}
             onSelectConversation={setActiveConversationId}
+            currentUser={user}
           />
         </div>
 
@@ -133,6 +95,9 @@ export default function Messages() {
                 // Instantly swap the placeholder ID with the real newly created thread ID in UI
                 setActiveConversationId(newId);
                 setConversations(prev => prev.map(c => c.id === activeConversation.id ? { ...c, id: newId, isPlaceholder: false } : c));
+              }}
+              onMessagesRead={(convoId) => {
+                setConversations(prev => prev.map(c => c.id === convoId ? { ...c, unreadCount: 0 } : c));
               }}
             />
           ) : (
