@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { uploadAvatar } from '../lib/upload'
+import { uploadAvatar, deleteAvatar } from '../lib/upload'
 import { useAuth } from '../hooks/useAuth'
 import {
   CheckCircle2,
   Clock,
   Edit,
   Camera,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react'
 
 export default function UnifiedProfileCard({ profile, loadingProfile }) {
@@ -55,6 +56,23 @@ export default function UnifiedProfileCard({ profile, loadingProfile }) {
     }
   }
 
+  const handleAvatarDelete = async (e) => {
+    e.stopPropagation() // Don't trigger the file picker
+    if (!avatarUrl || uploading) return
+    if (!window.confirm('Remove your profile picture?')) return
+
+    try {
+      setUploading(true)
+      await deleteAvatar()
+      setAvatarUrl(null)
+    } catch (err) {
+      console.error('Avatar delete failed:', err)
+      alert('Failed to remove avatar. Please try again.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
       {/* Cover Banner */}
@@ -80,6 +98,16 @@ export default function UnifiedProfileCard({ profile, loadingProfile }) {
                 : <Camera className="w-6 h-6 text-white" />
               }
             </div>
+            {/* Delete button — only shown when a custom avatar exists */}
+            {avatarUrl && !uploading && (
+              <button
+                onClick={handleAvatarDelete}
+                className="absolute -top-1 -right-1 z-10 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Remove profile picture"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            )}
             {/* Uploading overlay (always visible while uploading) */}
             {uploading && (
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
