@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { fetchProfiles, approveProfile, rejectProfile } from '../api/adminApi'
+import { fetchProfiles, approveProfile, rejectProfile, exportUsersExcel } from '../api/adminApi'
 
 export default function AdminDashboard() {
   const [pendingProfiles, setPendingProfiles] = useState([])
@@ -10,6 +10,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('pending')
   const [adminNotes, setAdminNotes] = useState({})
+
+  // Export filter state
+  const [exportUserType, setExportUserType] = useState('')
+  const [exportYear, setExportYear] = useState('')
+  const [exportBranch, setExportBranch] = useState('')
+  const [exporting, setExporting] = useState(false)
 
   const nav = useNavigate()
   const { user, authStatus, loading: authLoading, logout } = useAuth()
@@ -39,6 +45,21 @@ export default function AdminDashboard() {
     }
   }, [authStatus, authLoading, nav, loadProfiles])
 
+  // Compute unique years and branches from approved profiles for filter dropdowns
+  const uniqueYears = useMemo(() => {
+    const years = approvedProfiles
+      .map(p => p.graduation_year)
+      .filter(Boolean)
+    return [...new Set(years)].sort((a, b) => b - a)
+  }, [approvedProfiles])
+
+  const uniqueBranches = useMemo(() => {
+    const branches = approvedProfiles
+      .map(p => p.branch)
+      .filter(Boolean)
+    return [...new Set(branches)].sort()
+  }, [approvedProfiles])
+
   const handleApprove = async (profileId) => {
     try {
       await approveProfile(profileId)
@@ -59,6 +80,21 @@ export default function AdminDashboard() {
       loadProfiles()
     } catch (err) {
       alert(err)
+    }
+  }
+
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      const filters = {}
+      if (exportUserType) filters.user_type = exportUserType
+      if (exportYear) filters.graduation_year = exportYear
+      if (exportBranch) filters.branch = exportBranch
+      await exportUsersExcel(filters)
+    } catch (err) {
+      alert(err)
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -107,6 +143,91 @@ export default function AdminDashboard() {
           <StatCard label="Total Reviewed" value={approvedProfiles.length + rejectedProfiles.length} color="text-indigo-600" />
         </section>
 
+        {/* ──── Export Section ──── */}
+        <section className="mt-6 bg-white rounded-2xl border border-slate-200 p-6">
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Export User Data</h2>
+          <p className="text-sm text-slate-500 mb-4">
+            Download approved user profiles as an Excel spreadsheet. Use the filters below to narrow down the data.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+            {/* User Type Filter */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">User Type</label>
+              <select
+                id="export-user-type"
+                value={exportUserType}
+                onChange={(e) => setExportUserType(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
+              >
+                <option value="">All Users</option>
+                <option value="Alumni">Alumni</option>
+                <option value="Student">Student</option>
+              </select>
+            </div>
+
+            {/* Graduation Year Filter */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">Graduation Year</label>
+              <select
+                id="export-graduation-year"
+                value={exportYear}
+                onChange={(e) => setExportYear(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
+              >
+                <option value="">All Years</option>
+                {uniqueYears.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Branch Filter */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">Branch</label>
+              <select
+                id="export-branch"
+                value={exportBranch}
+                onChange={(e) => setExportBranch(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
+              >
+                <option value="">All Branches</option>
+                {uniqueBranches.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Download Button */}
+            <div>
+              <button
+                id="export-download-btn"
+                onClick={handleExport}
+                disabled={exporting}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition"
+              >
+                {exporting ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Exporting…
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download Excel
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ──── Profiles Table ──── */}
         <section className="mt-6 bg-white rounded-2xl border border-slate-200">
           <div className="flex items-center gap-2 border-b border-slate-200 p-3">
             {['pending', 'approved', 'rejected'].map((tab) => (
