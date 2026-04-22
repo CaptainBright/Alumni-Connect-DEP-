@@ -87,8 +87,8 @@ exports.loginUser = async (req, res) => {
 
         res.cookie('session_token', token, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'Lax',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
@@ -116,8 +116,8 @@ exports.loginUser = async (req, res) => {
 exports.logoutUser = (req, res) => {
     res.clearCookie('session_token', {
         httpOnly: true,
-        secure: false,
-        sameSite: 'Lax',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/'
     });
     res.status(200).json({ message: 'Logged out successfully' });
@@ -172,8 +172,8 @@ exports.loginWithSupabaseToken = async (req, res) => {
 
         res.cookie('session_token', token, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'Lax',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 

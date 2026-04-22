@@ -1,6 +1,6 @@
 // client/src/lib/upload.js
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001'
+const API_BASE = import.meta.env.VITE_SERVER_URL || 'http://localhost:5001'
 
 export async function uploadAvatar(file, userId) {
   // Send the file to the server, which uploads to Supabase Storage
