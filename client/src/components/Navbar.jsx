@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabaseClient'
 const publicMenus = [
   {
     label: 'Home',
-    to: 'http://localhost:5173/',
+    to: '/',
     icon: Home,
   },
   {
@@ -61,7 +61,7 @@ const publicMenus = [
 const loggedMenus = [
   {
     label: 'Home',
-    to: 'http://localhost:5173/',
+    to: '/',
     icon: Home,
   },
   ...publicMenus.slice(1),
@@ -184,13 +184,13 @@ export default function Navbar() {
     <header className={`navbar ${isHomePublic ? 'fixed' : 'sticky'} top-0 left-0 right-0 z-[1000] ${showScrolledStyle ? 'navbar-scrolled' : ''} ${isHomePublic ? 'navbar-home' : ''}`}>
       <div className="navbar-shell">
         <div className="navbar-logo-section">
-          <a href="http://localhost:5173/" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <img src="/1.png" alt="IIT Ropar Alumni" className="w-[42px] h-[42px] rounded-full object-cover border border-white/25" />
             <div className="text-white leading-tight">
               <p className="text-[16px] font-semibold">IIT Ropar Alumni</p>
               <p className="text-xs text-white/85">Connect Portal</p>
             </div>
-          </a>
+          </Link>
         </div>
 
         <div className={`navbar-menu-section ${showScrolledStyle ? 'navbar-menu-scrolled' : ''}`}>
