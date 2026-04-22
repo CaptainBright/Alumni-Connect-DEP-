@@ -1,8 +1,7 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { loginUser, logoutUser, getCurrentUser } from '../api/authApi'
-import { AuthContext } from './auth-context' // Ensure this exports the context object if it's separate, or we can export it here if it was defined here. 
-// Assuming AuthContext is defined in 'auth-context.js' as per import.
-// If 'auth-context.js' only creates the context, we use it.
+import { AuthContext } from './auth-context'
+import { supabase } from '../lib/supabaseClient'
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -19,9 +18,6 @@ export function AuthProvider({ children }) {
 
     setUser(userData)
 
-    // Determine status based on role/profile
-    // Server returns: { id, email, role }
-    // We map this to our app's status
     const role = (userData.role || '').toLowerCase()
     const approvalStatus = (userData.approval_status || '').toUpperCase()
 
@@ -39,8 +35,21 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setLoading(true)
     try {
+      // 1. Authenticate via backend API (sets httpOnly cookie)
       const response = await loginUser(email, password)
       const { user: userData } = response.data
+
+      // 2. ALSO sign in on the frontend Supabase client so auth.uid() is
+      //    available for RLS policies (connections, events, etc.)
+      try {
+        await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password
+        })
+      } catch (sbErr) {
+        console.warn('Frontend Supabase sign-in failed (non-critical):', sbErr)
+      }
+
       setSessionFromUser(userData)
       return { success: true, data: userData }
     } catch (error) {
@@ -57,9 +66,6 @@ export function AuthProvider({ children }) {
   const googleLogin = async (accessToken, refreshToken) => {
     setLoading(true)
     try {
-      // 1. Send token to server
-      // 2. Server sets cookie
-      // 3. Server returns user data
       const response = await import('../api/authApi').then(mod => mod.loginWithSupabaseToken(accessToken, refreshToken))
       const { user: userData } = response.data
       setSessionFromUser(userData)
@@ -82,6 +88,12 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Logout error:', error)
     }
+    // Also sign out the frontend Supabase client
+    try {
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.warn('Supabase signOut failed (non-critical):', err)
+    }
     setSessionFromUser(null)
   }
 
@@ -92,7 +104,6 @@ export function AuthProvider({ children }) {
       const { user: userData } = response.data
       setSessionFromUser(userData)
     } catch (error) {
-      // 401 or 403 means not logged in
       setSessionFromUser(null)
     } finally {
       setLoading(false)
@@ -112,7 +123,7 @@ export function AuthProvider({ children }) {
     login,
     googleLogin,
     logout,
-    checkSession // Exposed for manual refresh if needed
+    checkSession
   }), [user, authStatus, loading])
 
   return (

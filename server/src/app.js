@@ -20,12 +20,14 @@ const adminRoutes = require('./routes/adminRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const experienceRoutes = require('./routes/experienceRoutes');
+const connectionRoutes = require('./routes/connectionRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/experiences', experienceRoutes);
+app.use('/api/connections', connectionRoutes);
 
 // Health check
 app.get('/', (req, res) => {

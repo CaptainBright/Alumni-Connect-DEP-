@@ -103,12 +103,29 @@ export const broadcastApi = {
     const { error } = await supabase
       .from('announcement_reads')
       .insert([{ announcement_id: announcementId, user_id: userId }])
-      // Using upsert or ignoring error if already exists due to unique constraint
-      // supabase-js doesn't have a built-in 'ON CONFLICT DO NOTHING' without an RPC or upsert
-      // We will just catch the error if it's a unique violation
     
-    if (error && error.code !== '23505') { // 23505 is unique_violation
+    if (error && error.code !== '23505') {
       console.error('Error marking announcement as read:', error);
     }
+  },
+
+  /**
+   * Delete a broadcast globally (Admin only).
+   * This removes it from admin_broadcasts so it disappears for all users.
+   */
+  async deleteBroadcast(broadcastId) {
+    // First delete related reads
+    await supabase
+      .from('announcement_reads')
+      .delete()
+      .eq('announcement_id', broadcastId);
+
+    const { error } = await supabase
+      .from('admin_broadcasts')
+      .delete()
+      .eq('id', broadcastId);
+
+    if (error) throw error;
+    return true;
   }
 };

@@ -1,108 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Bell, ChevronDown, Home, Menu, MessageCircle, Search, User, X } from 'lucide-react'
+import { Bell, Home, Menu, MessageCircle, Search, User, X, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { messagingApi } from '../api/messagingApi'
 import { broadcastApi } from '../api/broadcastApi'
 import { supabase } from '../lib/supabaseClient'
 
 const publicMenus = [
-  {
-    label: 'Home',
-    to: '/',
-    icon: Home,
-  },
-  {
-    label: 'Network',
-    items: [
-      { label: 'Alumni Directory', to: '/network' },
-      { label: 'Connections', to: '/network' },
-      { label: 'Recommended Alumni', to: '/network' },
-    ],
-  },
-  {
-    label: 'Jobs',
-    items: [
-      { label: 'Job Board', to: '/jobs' },
-      { label: 'Internships', to: '/jobs' },
-      { label: 'Startup Hiring', to: '/jobs' },
-    ],
-  },
-  {
-    label: 'Events',
-    items: [
-      { label: 'Upcoming Events', to: '/events' },
-      { label: 'Webinars', to: '/events' },
-      { label: 'Alumni Meetups', to: '/events' },
-    ],
-  },
-  {
-    label: 'Mentorship',
-    items: [
-      { label: 'Find Mentor', to: '/mentorship' },
-      { label: 'Mentorship Requests', to: '/mentorship' },
-      { label: 'My Mentors', to: '/mentorship' },
-    ],
-  },
-  {
-    label: 'Resources',
-    items: [
-      { label: 'Career Resources', to: '/resources' },
-      { label: 'Learning Materials', to: '/resources' },
-      { label: 'Interview Prep', to: '/career-playbooks' },
-    ],
-  },
-  {
-    label: 'About',
-    to: '/about',
-  },
-]
-
-const loggedMenus = [
-  {
-    label: 'Home',
-    to: '/',
-    icon: Home,
-  },
-  ...publicMenus.slice(1),
+  { label: 'Home', to: '/', icon: Home },
+  { label: 'Alumni Directory', to: '/network' },
+  { label: 'Job Board', to: '/jobs' },
+  { label: 'Events', to: '/events' },
+  { label: 'Resources', to: '/resources' },
+  { label: 'About', to: '/about' },
 ]
 
 function DesktopMenu({ item }) {
   const Icon = item.icon
-  if (item.to) {
-    const isExternal = item.to.startsWith('http')
-    if (isExternal) {
-      return (
-        <a href={item.to} className="nav-link inline-flex items-center gap-2">
-          {Icon && <Icon size={20} />}
-          <span>{item.label}</span>
-        </a>
-      )
-    }
-    return (
-      <Link to={item.to} className="nav-link inline-flex items-center gap-2">
-        {Icon && <Icon size={20} />}
-        <span>{item.label}</span>
-      </Link>
-    )
-  }
-
   return (
-    <div className="relative group">
-      <button type="button" className="nav-link inline-flex items-center gap-2">
-        <span>{item.label}</span>
-        <ChevronDown size={16} />
-      </button>
-      <div className="dropdown-panel absolute left-0 top-full pt-[6px] w-64 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
-        <div className="rounded-xl border border-slate-600 bg-[#1f2a44] p-2">
-          {item.items.map((sub) => (
-            <Link key={sub.label} to={sub.to} className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-white/10">
-              {sub.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
+    <Link to={item.to} className="nav-link inline-flex items-center gap-2">
+      {Icon && <Icon size={20} />}
+      <span>{item.label}</span>
+    </Link>
   )
 }
 
@@ -113,21 +32,32 @@ export default function Navbar() {
 
   const [isScrolled, setIsScrolled] = React.useState(false)
   const [mobileOpen, setMobileOpen] = React.useState(false)
-  const [mobileAccordion, setMobileAccordion] = useState(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
   const [unreadAnnouncements, setUnreadAnnouncements] = useState(0)
   const profileRef = useRef(null)
 
   const isLoggedIn = authStatus !== 'guest' && authStatus !== 'loading'
+  const isAdmin = authStatus === 'admin'
   const isHomePublic = !isLoggedIn && location.pathname === '/'
   const showScrolledStyle = isScrolled || !isHomePublic
-  const menus = isLoggedIn ? loggedMenus : publicMenus
   const displayName = user?.full_name || user?.name || user?.email || 'Alumni User'
   const avatarUrl =
     user?.avatar_url ||
     user?.profile_image ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8C1515&color=fff`
+
+  // Build menus dynamically for logged-in users
+  const menus = isLoggedIn
+    ? [
+        { label: 'Home', to: '/dashboard', icon: Home },
+        { label: 'Alumni Directory', to: '/network' },
+        { label: 'Job Board', to: '/jobs' },
+        { label: 'Events', to: '/events' },
+        { label: 'Resources', to: '/resources' },
+        ...(isAdmin ? [{ label: 'Approvals', to: '/admin', icon: ShieldCheck }] : []),
+      ]
+    : publicMenus
 
   React.useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 50)
@@ -184,7 +114,7 @@ export default function Navbar() {
     <header className={`navbar ${isHomePublic ? 'fixed' : 'sticky'} top-0 left-0 right-0 z-[1000] ${showScrolledStyle ? 'navbar-scrolled' : ''} ${isHomePublic ? 'navbar-home' : ''}`}>
       <div className="navbar-shell">
         <div className="navbar-logo-section">
-          <Link to="/" className="flex items-center gap-3">
+          <Link to={isLoggedIn ? '/dashboard' : '/'} className="flex items-center gap-3">
             <img src="/1.png" alt="IIT Ropar Alumni" className="w-[42px] h-[42px] rounded-full object-cover border border-white/25" />
             <div className="text-white leading-tight">
               <p className="text-[16px] font-semibold">IIT Ropar Alumni</p>
@@ -220,7 +150,7 @@ export default function Navbar() {
 
               {isLoggedIn && (
                 <>
-                  <button type="button" onClick={() => navigate('/dashboard')} className="icon-btn relative" aria-label="Notifications">
+                  <button type="button" onClick={() => navigate('/notifications')} className="icon-btn relative" aria-label="Notifications">
                     <Bell size={20} />
                     {unreadAnnouncements > 0 && (
                       <span className="notif-badge">{unreadAnnouncements > 99 ? '99+' : unreadAnnouncements}</span>
@@ -244,13 +174,12 @@ export default function Navbar() {
                     </button>
                     {profileOpen && (
                       <div className="dropdown-panel absolute right-0 top-[46px] w-52 rounded-xl border border-slate-600 bg-[#1F2A44] p-2 z-50">
-                        {authStatus === 'admin' && (
+                        {isAdmin && (
                           <Link to="/admin" className="block rounded-lg px-3 py-2 text-sm text-red-400 font-bold hover:bg-[#2E3B5B]">Admin Dashboard</Link>
                         )}
                         <Link to="/dashboard" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">My Profile</Link>
                         <Link to="/edit-profile" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Edit Profile</Link>
                         <Link to="/jobs" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Applications</Link>
-                        <Link to="/jobs" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Saved Jobs</Link>
                         <Link to="/edit-profile" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Settings</Link>
                         <button onClick={handleLogout} className="w-full text-left rounded-lg px-3 py-2 text-sm text-red-200 hover:bg-red-900/30">Logout</button>
                       </div>
@@ -276,45 +205,21 @@ export default function Navbar() {
                 <Search size={18} className="text-white/80" />
                 <input type="text" placeholder="Search alumni, jobs, mentors..." className="search-input" />
               </div>
-              {menus.map((item) => {
-                if (item.to) {
-                  const isExternal = item.to.startsWith('http')
-                  if (isExternal) {
-                    return (
-                      <a key={item.label} href={item.to} className="block px-3 py-2 text-white rounded-lg hover:bg-[#2E3B5B]">
-                        {item.label}
-                      </a>
-                    )
-                  }
-                  return (
-                    <Link key={item.label} to={item.to} className="block px-3 py-2 text-white rounded-lg hover:bg-[#2E3B5B]">
-                      {item.label}
-                    </Link>
-                  )
-                }
-                const isOpen = mobileAccordion === item.label
-                return (
-                  <div key={item.label}>
-                    <button
-                      type="button"
-                      onClick={() => setMobileAccordion((prev) => (prev === item.label ? null : item.label))}
-                      className="w-full flex items-center justify-between px-3 py-2 text-white rounded-lg hover:bg-[#2E3B5B]"
-                    >
-                      <span>{item.label}</span>
-                      <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    {isOpen && (
-                      <div className="pl-3">
-                        {item.items.map((sub) => (
-                          <Link key={sub.label} to={sub.to} className="block px-3 py-2 text-sm text-white/90 rounded-lg hover:bg-[#2E3B5B]">
-                            {sub.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+              {menus.map((item) => (
+                <Link key={item.label} to={item.to} className="block px-3 py-2 text-white rounded-lg hover:bg-[#2E3B5B]" onClick={() => setMobileOpen(false)}>
+                  {item.label}
+                </Link>
+              ))}
+              {isLoggedIn && (
+                <>
+                  <Link to="/notifications" className="block px-3 py-2 text-white rounded-lg hover:bg-[#2E3B5B]" onClick={() => setMobileOpen(false)}>
+                    Notifications {unreadAnnouncements > 0 && `(${unreadAnnouncements})`}
+                  </Link>
+                  <Link to="/messages" className="block px-3 py-2 text-white rounded-lg hover:bg-[#2E3B5B]" onClick={() => setMobileOpen(false)}>
+                    Messages {unreadMessages > 0 && `(${unreadMessages})`}
+                  </Link>
+                </>
+              )}
             </div>
           )}
         </div>

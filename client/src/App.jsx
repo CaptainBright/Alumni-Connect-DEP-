@@ -23,6 +23,8 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import PendingApproval from './pages/PendingApproval'
 import AnnouncementDetail from './pages/AnnouncementDetail'
+import Notifications from './pages/Notifications'
+import Events from './pages/Events'
 
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -54,13 +56,13 @@ export default function App() {
           >
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/announcements/:id" element={<AnnouncementDetail />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/network" element={<Navigate to="/directory" replace />} />
             <Route path="/jobs" element={<Jobs />} />
-            <Route path="/events" element={<Navigate to="/resources" replace />} />
-            <Route path="/mentorship" element={<Navigate to="/resources" replace />} />
+            <Route path="/events" element={<Events />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/career-playbooks" element={<CareerPlaybooks />} />
             <Route path="/career-playbooks/write" element={<WriteExperience />} />

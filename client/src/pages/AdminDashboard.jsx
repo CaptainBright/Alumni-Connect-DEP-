@@ -3,6 +3,24 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { fetchProfiles, approveProfile, rejectProfile, exportUsersExcel } from '../api/adminApi'
 import AdminBroadcastPanel from '../components/admin/AdminBroadcastPanel'
+import {
+  ShieldCheck,
+  Users,
+  UserCheck,
+  UserX,
+  ClipboardList,
+  Download,
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Megaphone,
+  RefreshCw,
+  LogOut,
+  Building,
+  GraduationCap,
+  Briefcase,
+  AlertTriangle
+} from 'lucide-react'
 
 export default function AdminDashboard() {
   const [pendingProfiles, setPendingProfiles] = useState([])
@@ -11,12 +29,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   
-  // Navigation Tabs
-  const [mainTab, setMainTab] = useState('approvals') // 'approvals' | 'broadcasts'
+  const [mainTab, setMainTab] = useState('approvals')
   const [activeTab, setActiveTab] = useState('pending')
   const [adminNotes, setAdminNotes] = useState({})
 
-  // Export filter state
   const [exportUserType, setExportUserType] = useState('')
   const [exportYear, setExportYear] = useState('')
   const [exportBranch, setExportBranch] = useState('')
@@ -28,11 +44,9 @@ export default function AdminDashboard() {
   const loadProfiles = useCallback(async () => {
     try {
       const data = await fetchProfiles()
-
       setPendingProfiles(data.profiles.filter(p => p.approval_status === 'PENDING'))
       setApprovedProfiles(data.profiles.filter(p => p.approval_status === 'APPROVED'))
       setRejectedProfiles(data.profiles.filter(p => p.approval_status === 'REJECTED'))
-
       setLoading(false)
     } catch (err) {
       console.error('Error fetching profiles:', err)
@@ -51,18 +65,13 @@ export default function AdminDashboard() {
     }
   }, [authStatus, authLoading, nav, loadProfiles])
 
-  // Compute unique years and branches from approved profiles for filter dropdowns
   const uniqueYears = useMemo(() => {
-    const years = approvedProfiles
-      .map(p => p.graduation_year)
-      .filter(Boolean)
+    const years = approvedProfiles.map(p => p.graduation_year).filter(Boolean)
     return [...new Set(years)].sort((a, b) => b - a)
   }, [approvedProfiles])
 
   const uniqueBranches = useMemo(() => {
-    const branches = approvedProfiles
-      .map(p => p.branch)
-      .filter(Boolean)
+    const branches = approvedProfiles.map(p => p.branch).filter(Boolean)
     return [...new Set(branches)].sort()
   }, [approvedProfiles])
 
@@ -111,8 +120,11 @@ export default function AdminDashboard() {
 
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-600">Loading admin dashboard...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--cardinal)]" />
+          <p className="text-sm font-medium text-slate-500">Loading admin dashboard...</p>
+        </div>
       </div>
     )
   }
@@ -120,11 +132,14 @@ export default function AdminDashboard() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg max-w-lg text-center">
-          <h2 className="text-lg font-bold mb-2">Failed to load data</h2>
-          <p className="text-sm">{error}</p>
-          <p className="text-xs mt-4 text-red-600/80">Make sure your backend API is accessible and VITE_SERVER_URL is configured correctly in Vercel.</p>
-          <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Retry</button>
+        <div className="bg-white border border-red-200 rounded-2xl p-8 max-w-lg text-center shadow-sm">
+          <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+          <h2 className="text-lg font-bold text-slate-900 mb-2">Failed to load data</h2>
+          <p className="text-sm text-slate-600 mb-2">{error}</p>
+          <p className="text-xs text-slate-400 mb-6">Make sure your backend API is accessible and VITE_SERVER_URL is configured correctly.</p>
+          <button onClick={() => window.location.reload()} className="flex items-center gap-2 mx-auto px-5 py-2 bg-[var(--cardinal)] text-white rounded-xl hover:bg-red-800 transition font-semibold">
+            <RefreshCw className="w-4 h-4" /> Retry
+          </button>
         </div>
       </div>
     )
@@ -137,171 +152,193 @@ export default function AdminDashboard() {
         ? approvedProfiles
         : rejectedProfiles
 
+  const tabConfig = [
+    { key: 'pending', label: 'Pending', count: pendingProfiles.length, icon: ClipboardList, color: 'text-amber-600' },
+    { key: 'approved', label: 'Approved', count: approvedProfiles.length, icon: UserCheck, color: 'text-emerald-600' },
+    { key: 'rejected', label: 'Rejected', count: rejectedProfiles.length, icon: UserX, color: 'text-rose-600' },
+  ]
+
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm uppercase text-[var(--cardinal)] tracking-wide font-semibold">Admin Console</p>
-            <h1 className="text-2xl font-bold text-slate-900">Approval Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--cardinal)] to-red-800 flex items-center justify-center shadow-lg shadow-red-200/40">
+              <ShieldCheck className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs uppercase text-[var(--cardinal)] tracking-widest font-bold">Admin Console</p>
+              <h1 className="text-xl font-bold text-slate-900">Approval Dashboard</h1>
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-[var(--cardinal)] text-white rounded-lg hover:opacity-90 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition font-semibold text-sm"
           >
-            Logout
+            <LogOut className="w-4 h-4" /> Logout
           </button>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         
-        {/* Main Tabs */}
-        <div className="flex items-center gap-4 border-b border-slate-200 mb-6 pb-2">
+        {/* Main Navigation Tabs */}
+        <div className="flex items-center gap-2 mb-8">
           <button 
             onClick={() => setMainTab('approvals')}
-            className={`pb-2 px-2 text-lg font-bold border-b-2 transition-colors ${mainTab === 'approvals' ? 'border-[var(--cardinal)] text-[var(--cardinal)]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              mainTab === 'approvals' 
+                ? 'bg-[var(--cardinal)] text-white shadow-md shadow-red-200/40' 
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
           >
-            User Approvals
+            <Users className="w-4 h-4" /> User Approvals
           </button>
           <button 
             onClick={() => setMainTab('broadcasts')}
-            className={`pb-2 px-2 text-lg font-bold border-b-2 transition-colors ${mainTab === 'broadcasts' ? 'border-[var(--cardinal)] text-[var(--cardinal)]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              mainTab === 'broadcasts' 
+                ? 'bg-[var(--cardinal)] text-white shadow-md shadow-red-200/40' 
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
           >
-            Broadcast Messaging
+            <Megaphone className="w-4 h-4" /> Broadcast Messaging
           </button>
         </div>
 
         {mainTab === 'approvals' ? (
           <>
-            <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <StatCard label="Pending" value={pendingProfiles.length} color="text-amber-600" />
-              <StatCard label="Approved" value={approvedProfiles.length} color="text-emerald-600" />
-              <StatCard label="Rejected" value={rejectedProfiles.length} color="text-rose-600" />
-              <StatCard label="Total Reviewed" value={approvedProfiles.length + rejectedProfiles.length} color="text-indigo-600" />
+            {/* Stat Cards */}
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <StatCard label="Pending" value={pendingProfiles.length} icon={ClipboardList} color="text-amber-600" bg="bg-amber-50" />
+              <StatCard label="Approved" value={approvedProfiles.length} icon={UserCheck} color="text-emerald-600" bg="bg-emerald-50" />
+              <StatCard label="Rejected" value={rejectedProfiles.length} icon={UserX} color="text-rose-600" bg="bg-rose-50" />
+              <StatCard label="Total Reviewed" value={approvedProfiles.length + rejectedProfiles.length} icon={Users} color="text-indigo-600" bg="bg-indigo-50" />
             </section>
 
-            {/* ──── Export Section ──── */}
-        <section className="mt-6 bg-white rounded-2xl border border-slate-200 p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-1">Export User Data</h2>
-          <p className="text-sm text-slate-500 mb-4">
-            Download approved user profiles as an Excel spreadsheet. Use the filters below to narrow down the data.
-          </p>
+            {/* Export Section */}
+            <section className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 shadow-sm">
+              <div className="flex items-center gap-2 mb-1">
+                <Download className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-lg font-bold text-slate-900">Export User Data</h2>
+              </div>
+              <p className="text-sm text-slate-500 mb-5">
+                Download approved user profiles as an Excel spreadsheet. Use the filters to narrow results.
+              </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-            {/* User Type Filter */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">User Type</label>
-              <select
-                id="export-user-type"
-                value={exportUserType}
-                onChange={(e) => setExportUserType(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
-              >
-                <option value="">All Users</option>
-                <option value="Alumni">Alumni</option>
-                <option value="Student">Student</option>
-              </select>
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">User Type</label>
+                  <select
+                    id="export-user-type"
+                    value={exportUserType}
+                    onChange={(e) => setExportUserType(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
+                  >
+                    <option value="">All Users</option>
+                    <option value="Alumni">Alumni</option>
+                    <option value="Student">Student</option>
+                  </select>
+                </div>
 
-            {/* Graduation Year Filter */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Graduation Year</label>
-              <select
-                id="export-graduation-year"
-                value={exportYear}
-                onChange={(e) => setExportYear(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
-              >
-                <option value="">All Years</option>
-                {uniqueYears.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Graduation Year</label>
+                  <select
+                    id="export-graduation-year"
+                    value={exportYear}
+                    onChange={(e) => setExportYear(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
+                  >
+                    <option value="">All Years</option>
+                    {uniqueYears.map((year) => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
 
-            {/* Branch Filter */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Branch</label>
-              <select
-                id="export-branch"
-                value={exportBranch}
-                onChange={(e) => setExportBranch(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
-              >
-                <option value="">All Branches</option>
-                {uniqueBranches.map((b) => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Branch</label>
+                  <select
+                    id="export-branch"
+                    value={exportBranch}
+                    onChange={(e) => setExportBranch(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--cardinal)]"
+                  >
+                    <option value="">All Branches</option>
+                    {uniqueBranches.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
 
-            {/* Download Button */}
-            <div>
-              <button
-                id="export-download-btn"
-                onClick={handleExport}
-                disabled={exporting}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition"
-              >
-                {exporting ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Exporting…
-                  </>
+                <div>
+                  <button
+                    id="export-download-btn"
+                    onClick={handleExport}
+                    disabled={exporting}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition shadow-sm"
+                  >
+                    {exporting ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Exporting...</>
+                    ) : (
+                      <><Download className="w-4 h-4" /> Download Excel</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {/* Profiles Table */}
+            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="flex items-center gap-2 p-4 border-b border-slate-200 bg-slate-50/50">
+                {tabConfig.map((tab) => {
+                  const Icon = tab.icon
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg capitalize font-semibold text-sm transition-all ${
+                        activeTab === tab.key
+                          ? 'bg-[var(--cardinal)] text-white shadow-sm'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {tab.label}
+                      <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
+                        activeTab === tab.key ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {tab.count}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {list.length === 0 ? (
+                  <div className="col-span-2 text-center py-12">
+                    <Users className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                    <p className="text-slate-500 font-medium">No profiles in this section.</p>
+                  </div>
                 ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download Excel
-                  </>
+                  list.map((profile) => (
+                    <ProfileCard
+                      key={profile.id}
+                      profile={profile}
+                      isPending={activeTab === 'pending'}
+                      noteValue={adminNotes[profile.id] || ''}
+                      onNoteChange={(value) =>
+                        setAdminNotes((prev) => ({ ...prev, [profile.id]: value }))
+                      }
+                      onApprove={() => handleApprove(profile.id)}
+                      onReject={() => handleReject(profile.id, adminNotes[profile.id] || '')}
+                    />
+                  ))
                 )}
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* ──── Profiles Table ──── */}
-        <section className="mt-6 bg-white rounded-2xl border border-slate-200">
-          <div className="flex items-center gap-2 border-b border-slate-200 p-3">
-            {['pending', 'approved', 'rejected'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-lg capitalize font-medium transition ${activeTab === tab
-                  ? 'bg-[var(--cardinal)] text-white'
-                  : 'text-slate-600 hover:bg-slate-100'
-                  }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {list.length === 0 ? (
-              <div className="col-span-2 text-center py-10 text-slate-500">No profiles in this section.</div>
-            ) : (
-              list.map((profile) => (
-                <ProfileCard
-                  key={profile.id}
-                  profile={profile}
-                  isPending={activeTab === 'pending'}
-                  noteValue={adminNotes[profile.id] || ''}
-                  onNoteChange={(value) =>
-                    setAdminNotes((prev) => ({ ...prev, [profile.id]: value }))
-                  }
-                  onApprove={() => handleApprove(profile.id)}
-                  onReject={() => handleReject(profile.id, adminNotes[profile.id] || '')}
-                />
-              ))
-            )}
-          </div>
-        </section>
+              </div>
+            </section>
           </>
         ) : (
           <AdminBroadcastPanel uniqueYears={uniqueYears} uniqueBranches={uniqueBranches} />
@@ -311,49 +348,84 @@ export default function AdminDashboard() {
   )
 }
 
-function StatCard({ label, value, color }) {
+function StatCard({ label, value, icon: Icon, color, bg }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className={`text-3xl font-bold mt-2 ${color}`}>{value}</p>
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-slate-500">{label}</p>
+        <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center`}>
+          <Icon className={`w-4.5 h-4.5 ${color}`} />
+        </div>
+      </div>
+      <p className={`text-3xl font-black mt-2 ${color}`}>{value}</p>
     </div>
   )
 }
 
 function ProfileCard({ profile, isPending, noteValue, onNoteChange, onApprove, onReject }) {
   return (
-    <article className="rounded-xl border border-slate-200 p-5 bg-white hover:shadow-md transition">
+    <article className="rounded-2xl border border-slate-200 p-5 bg-white hover:shadow-md transition-all">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-bold text-slate-900">{profile.full_name || 'Unnamed'}</h3>
-          <p className="text-sm text-slate-600">{profile.email || 'No email'}</p>
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-600 font-bold text-sm shrink-0">
+            {(profile.full_name || 'U').charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-slate-900">{profile.full_name || 'Unnamed'}</h3>
+            <p className="text-xs text-slate-500">{profile.email || 'No email'}</p>
+          </div>
         </div>
-        <span className={`px-2 py-1 text-xs rounded-full font-semibold ${profile.approval_status === 'APPROVED'
-          ? 'bg-emerald-100 text-emerald-700'
-          : profile.approval_status === 'REJECTED'
-            ? 'bg-rose-100 text-rose-700'
-            : 'bg-amber-100 text-amber-700'
-          }`}>
+        <span className={`px-2.5 py-1 text-[10px] uppercase tracking-wider rounded-full font-bold ${
+          profile.approval_status === 'APPROVED'
+            ? 'bg-emerald-100 text-emerald-700'
+            : profile.approval_status === 'REJECTED'
+              ? 'bg-rose-100 text-rose-700'
+              : 'bg-amber-100 text-amber-700'
+        }`}>
           {profile.approval_status}
         </span>
       </div>
 
-      <div className="mt-3 text-sm text-slate-700 space-y-1">
-        <p><strong>Type:</strong> {profile.user_type}</p>
-        {profile.graduation_year && <p><strong>Graduation:</strong> {profile.graduation_year}</p>}
-        {profile.branch && <p><strong>Branch:</strong> {profile.branch}</p>}
-        {profile.company && <p><strong>Company:</strong> {profile.company}</p>}
-        {profile.role && <p><strong>Role:</strong> {profile.role}</p>}
-        {profile.admin_notes && <p><strong>Admin Note:</strong> {profile.admin_notes}</p>}
+      <div className="mt-4 space-y-1.5 text-sm text-slate-600">
+        <div className="flex items-center gap-2">
+          <Users className="w-3.5 h-3.5 text-slate-400" />
+          <span><strong>Type:</strong> {profile.user_type}</span>
+        </div>
+        {profile.graduation_year && (
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
+            <span><strong>Graduation:</strong> {profile.graduation_year}</span>
+          </div>
+        )}
+        {profile.branch && (
+          <div className="flex items-center gap-2">
+            <Building className="w-3.5 h-3.5 text-slate-400" />
+            <span><strong>Branch:</strong> {profile.branch}</span>
+          </div>
+        )}
+        {profile.company && (
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+            <span><strong>Company:</strong> {profile.company}</span>
+          </div>
+        )}
+        {profile.role && (
+          <p><strong>Role:</strong> {profile.role}</p>
+        )}
+        {profile.admin_notes && (
+          <p className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded-lg mt-2">
+            <strong>Admin Note:</strong> {profile.admin_notes}
+          </p>
+        )}
       </div>
 
       {isPending && (
-        <div className="mt-4 border-t border-slate-200 pt-4 space-y-3">
+        <div className="mt-4 border-t border-slate-100 pt-4 space-y-3">
           <button
             onClick={onApprove}
-            className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition font-semibold text-sm shadow-sm"
           >
-            Approve
+            <CheckCircle className="w-4 h-4" /> Approve
           </button>
           <div className="flex gap-2">
             <input
@@ -361,13 +433,13 @@ function ProfileCard({ profile, isPending, noteValue, onNoteChange, onApprove, o
               value={noteValue}
               onChange={(e) => onNoteChange(e.target.value)}
               placeholder="Reason for rejection (optional)"
-              className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              className="flex-1 px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
             />
             <button
               onClick={onReject}
-              className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition"
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition font-semibold text-sm shadow-sm"
             >
-              Reject
+              <XCircle className="w-4 h-4" /> Reject
             </button>
           </div>
         </div>

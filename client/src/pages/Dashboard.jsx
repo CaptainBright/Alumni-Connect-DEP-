@@ -6,6 +6,7 @@ import UnifiedProfileCard from '../components/UnifiedProfileCard'
 import RecommendedAlumniSection from '../components/RecommendedAlumniSection'
 import ConnectionRequests from '../components/network/ConnectionRequests'
 import { fetchExperiences } from '../api/experienceApi'
+import { eventApi } from '../api/eventApi'
 import {
   Briefcase,
   Users,
@@ -23,12 +24,6 @@ const recommendedAlumni = [
   { id: 1, name: 'Priya Sharma', role: 'Senior Product Manager, Microsoft', batch: 'CSE 2018', avatar: 'https://ui-avatars.com/api/?name=Priya+Sharma&background=8C1515&color=fff' },
   { id: 2, name: 'Arjun Verma', role: 'Software Engineer, Google', batch: 'EE 2019', avatar: 'https://ui-avatars.com/api/?name=Arjun+Verma&background=1F2A44&color=fff' },
   { id: 3, name: 'Neha Gupta', role: 'Research Scientist, NVIDIA', batch: 'ME 2017', avatar: 'https://ui-avatars.com/api/?name=Neha+Gupta&background=334155&color=fff' },
-]
-
-const eventSchedule = [
-  { id: 1, title: 'Alumni Mentorship Webinar', date: 'Mar 20, 2026', time: '7:00 PM IST' },
-  { id: 2, title: 'Startup Networking Circle', date: 'Mar 25, 2026', time: '6:30 PM IST' },
-  { id: 3, title: 'Annual Alumni Meet Planning', date: 'Apr 2, 2026', time: '5:00 PM IST' },
 ]
 
 function formatPostDate(dateStr) {
@@ -81,6 +76,7 @@ export default function Dashboard() {
   const [recentPosts, setRecentPosts] = useState([])
   const [loadingPosts, setLoadingPosts] = useState(true)
   const [broadcasts, setBroadcasts] = useState([])
+  const [eventSchedule, setEventSchedule] = useState([])
   const { user } = useAuth()
   const nav = useNavigate()
 
@@ -113,6 +109,15 @@ export default function Dashboard() {
     
     return () => { mounted = false }
   }, [user?.id])
+
+  // Fetch upcoming events for sidebar widget
+  useEffect(() => {
+    let mounted = true
+    eventApi.fetchTopUpcomingEvents(3)
+      .then(data => { if (mounted) setEventSchedule(data) })
+      .catch(err => console.error('Failed to load events:', err))
+    return () => { mounted = false }
+  }, [])
 
   useEffect(() => {
     let mounted = true
@@ -216,12 +221,19 @@ export default function Dashboard() {
               <h2 className="text-lg font-bold text-slate-900">Event Schedule</h2>
               <p className="text-sm text-slate-500 mt-1 mb-4">Upcoming community activities.</p>
               <div className="space-y-3">
-                {eventSchedule.map((event) => (
-                  <article key={event.id} className="rounded-xl border border-slate-200 p-3 bg-slate-50/70">
-                    <p className="text-sm font-semibold text-slate-900">{event.title}</p>
-                    <p className="text-xs text-slate-500 mt-1">{event.date} - {event.time}</p>
-                  </article>
-                ))}
+                {eventSchedule.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center py-4">No upcoming events</p>
+                ) : (
+                  eventSchedule.map((event) => (
+                    <Link to="/events" key={event.id} className="block rounded-xl border border-slate-200 p-3 bg-slate-50/70 hover:bg-slate-100 transition">
+                      <p className="text-sm font-semibold text-slate-900">{event.title}</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {new Date(event.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {event.event_time ? ` - ${event.event_time}` : ''}
+                      </p>
+                    </Link>
+                  ))
+                )}
               </div>
             </div>
 

@@ -1,4 +1,11 @@
-import { supabase } from '../lib/supabaseClient';
+import axios from 'axios';
+
+const API_BASE = (import.meta.env.VITE_SERVER_URL || 'http://localhost:5001') + '/api/connections';
+
+const api = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true // sends the session cookie
+});
 
 export const connectionApi = {
   /**
@@ -6,65 +13,28 @@ export const connectionApi = {
    */
   async getUserConnections(userId) {
     if (!userId) return [];
-
-    const { data, error } = await supabase
-      .from('connections')
-      .select(`
-        id, status, created_at,
-        requester:profiles!requester_id(id, full_name, avatar_url, role, company, user_type),
-        receiver:profiles!receiver_id(id, full_name, avatar_url, role, company, user_type)
-      `)
-      .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching connections:', error);
+    try {
+      const { data } = await api.get('/');
+      return data.connections || [];
+    } catch (err) {
+      console.error('Error fetching connections:', err);
       return [];
     }
-    return data;
   },
 
   /**
    * Send a new connection request
    */
   async sendRequest(requesterId, receiverId) {
-    // Check if backwards request exists already
-    const { data: existing } = await supabase
-      .from('connections')
-      .select('id, status')
-      .or(`and(requester_id.eq.${requesterId},receiver_id.eq.${receiverId}),and(requester_id.eq.${receiverId},receiver_id.eq.${requesterId})`)
-      .maybeSingle();
-
-    if (existing) {
-      throw new Error(`Connection request already exists with status: ${existing.status}`);
-    }
-
-    const { data, error } = await supabase
-      .from('connections')
-      .insert([{
-        requester_id: requesterId,
-        receiver_id: receiverId,
-        status: 'PENDING'
-      }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    const { data } = await api.post('/request', { receiverId });
+    return data.connection;
   },
 
   /**
    * Update connection status (ACCEPT / REJECT)
    */
   async updateStatus(connectionId, newStatus) {
-    const { data, error } = await supabase
-      .from('connections')
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq('id', connectionId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    const { data } = await api.put(`/${connectionId}/status`, { status: newStatus });
+    return data.connection;
   }
 };

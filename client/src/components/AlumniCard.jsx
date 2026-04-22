@@ -7,8 +7,21 @@ export default function AlumniCard({ alumni, currentUserId, connectionStatus, on
   const isSelf = currentUserId === alumni?.id;
   const isPending = connectionStatus === 'PENDING_SENT' || connectionStatus === 'PENDING_RECEIVED';
   const isConnected = connectionStatus === 'ACCEPTED';
+
   return (
-    <article className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group flex flex-col h-full">
+    <article className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group flex flex-col h-full relative">
+      {/* Connection Status Badge — Top Right */}
+      {!isSelf && isConnected && (
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] uppercase tracking-wider font-bold shadow-sm">
+          <UserCheck className="w-3 h-3" /> Connected
+        </div>
+      )}
+      {!isSelf && isPending && (
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-[10px] uppercase tracking-wider font-bold shadow-sm">
+          <Clock className="w-3 h-3" /> Pending
+        </div>
+      )}
+
       {/* Cover Banner */}
       <div className="h-24 bg-gradient-to-r from-[var(--cardinal)] to-red-800"></div>
 
@@ -72,31 +85,25 @@ export default function AlumniCard({ alumni, currentUserId, connectionStatus, on
 
           {!isSelf && (
             isConnected ? (
-              <div className="flex w-full gap-2">
-                <button className="flex-1 py-2 text-sm font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center gap-1.5 pointer-events-none">
-                  <UserCheck className="w-4 h-4" /> Connected
-                </button>
-                <button 
-                  onClick={() => nav(`/messages`)} 
-                  className="flex-1 py-2 text-sm font-semibold rounded-lg bg-[var(--cardinal)] text-white hover:opacity-90 flex items-center justify-center gap-1.5 transition shadow-sm"
-                >
-                  <MessageCircle className="w-4 h-4" /> Message
-                </button>
-              </div>
+              <button 
+                onClick={() => nav(`/messages`)} 
+                className="flex-1 py-2 text-sm font-semibold rounded-lg bg-[var(--cardinal)] text-white hover:opacity-90 flex items-center justify-center gap-1.5 transition shadow-sm"
+              >
+                <MessageCircle className="w-4 h-4" /> Message
+              </button>
+            ) : isPending ? (
+              <button
+                disabled
+                className="flex-1 py-2 text-sm font-semibold rounded-lg bg-slate-100 text-slate-500 border border-slate-200 flex items-center justify-center gap-1.5 cursor-not-allowed"
+              >
+                <Clock className="w-4 h-4" /> Request Sent
+              </button>
             ) : (
               <button
-                onClick={!isPending ? onConnect : undefined}
-                disabled={isPending}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg flex items-center justify-center gap-1.5 transition overflow-hidden text-ellipsis whitespace-nowrap ${
-                  isPending ? 'bg-slate-100 text-slate-500 border border-slate-200'
-                  : 'bg-[var(--cardinal)] text-white hover:opacity-90 shadow-sm'
-                }`}
+                onClick={onConnect}
+                className="flex-1 py-2 text-sm font-semibold rounded-lg bg-[var(--cardinal)] text-white hover:opacity-90 shadow-sm flex items-center justify-center gap-1.5 transition"
               >
-                {isPending ? (
-                  <><Clock className="w-4 h-4" /> Pending</>
-                ) : (
-                  <><UserPlus className="w-4 h-4" /> Connect</>
-                )}
+                <UserPlus className="w-4 h-4" /> Connect
               </button>
             )
           )}
