@@ -9,6 +9,7 @@ export default function AdminDashboard() {
   const [approvedProfiles, setApprovedProfiles] = useState([])
   const [rejectedProfiles, setRejectedProfiles] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   
   // Navigation Tabs
   const [mainTab, setMainTab] = useState('approvals') // 'approvals' | 'broadcasts'
@@ -35,6 +36,7 @@ export default function AdminDashboard() {
       setLoading(false)
     } catch (err) {
       console.error('Error fetching profiles:', err)
+      setError(err.toString())
       setLoading(false)
     }
   }, [])
@@ -111,6 +113,19 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-slate-600">Loading admin dashboard...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg max-w-lg text-center">
+          <h2 className="text-lg font-bold mb-2">Failed to load data</h2>
+          <p className="text-sm">{error}</p>
+          <p className="text-xs mt-4 text-red-600/80">Make sure your backend API is accessible and VITE_SERVER_URL is configured correctly in Vercel.</p>
+          <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Retry</button>
+        </div>
       </div>
     )
   }
