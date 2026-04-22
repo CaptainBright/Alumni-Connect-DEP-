@@ -40,9 +40,17 @@ export default function ChatInput({ onSendMessage, isUploading = false }) {
           ref={fileInputRef} 
           className="hidden" 
           onChange={(e) => {
-            if (e.target.files && e.target.files[0]) setSelectedFile(e.target.files[0]);
+            if (e.target.files && e.target.files[0]) {
+              const file = e.target.files[0];
+              if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be under 5MB.');
+                e.target.value = null;
+                return;
+              }
+              setSelectedFile(file);
+            }
           }}
-          accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+          accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.zip"
         />
         <button 
           type="button"

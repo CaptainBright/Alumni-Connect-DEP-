@@ -57,7 +57,7 @@ export default function ChatSidebar({ conversations, activeConversationId, onSel
 
     if (activeTab === 'Unread') return c.unreadCount > 0;
     if (activeTab === 'Mentorship') return (c.context_tag || c.contextTag || '').toLowerCase().includes('mentor');
-    
+
     return true;
   });
 
@@ -141,13 +141,18 @@ export default function ChatSidebar({ conversations, activeConversationId, onSel
                 activeConversationId === conv.id ? 'bg-red-50/50 border-l-4 border-l-[var(--cardinal)]' : 'hover:bg-slate-50'
               }`}
             >
-              <div className="relative group">
-                <img src={conv.participant.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${conv.participant.full_name}`} alt="Avatar" className="w-12 h-12 rounded-full object-cover border-2 border-slate-100 shadow-sm transition-transform group-hover:scale-105" />
-                {conv.unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--cardinal)] text-[10px] font-bold text-white shadow-sm ring-2 ring-white animate-pulse">
-                    {conv.unreadCount}
-                  </span>
-                )}
+              <div className="relative group flex flex-col items-center shrink-0 w-14">
+                <div className="relative">
+                  <img src={conv.participant.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${conv.participant.full_name}`} alt="Avatar" className="w-12 h-12 rounded-full object-cover border-2 border-slate-100 shadow-sm transition-transform group-hover:scale-105" />
+                  {conv.unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--cardinal)] text-[10px] font-bold text-white shadow-sm ring-2 ring-white animate-pulse">
+                      {conv.unreadCount}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-[8px] uppercase tracking-wider font-bold mt-1.5 px-1.5 py-[2px] rounded border w-full text-center truncate ${conv.participant.user_type === 'Alumni' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                  {conv.participant.user_type || 'Student'}
+                </span>
               </div>
               
               <div className="flex-1 min-w-0">

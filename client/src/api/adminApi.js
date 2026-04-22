@@ -64,3 +64,12 @@ export const exportUsersExcel = async (filters = {}) => {
         throw error.response?.data?.message || 'Failed to export users';
     }
 };
+
+export const sendBroadcastEmail = async (payload) => {
+    try {
+        const response = await api.post('/admin/broadcast/email', payload);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data?.message || 'Failed to send broadcast emails';
+    }
+};

@@ -11,15 +11,13 @@ import {
   Users,
   Calendar,
   Bell,
-  Sparkles
+  Sparkles,
+  Paperclip,
+  Megaphone
 } from 'lucide-react'
+import { broadcastApi } from '../api/broadcastApi'
 
-const activityFeed = [
-  { id: 1, type: 'status', title: 'Application Update', desc: 'Your application to TechCorp is under review.', time: '2h ago', icon: Briefcase, color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-200', borderLeft: 'border-l-slate-400' },
-  { id: 2, type: 'job', title: 'New Job Match', desc: 'SDE at Google aligns with your profile.', time: '5h ago', icon: Sparkles, color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-200', borderLeft: 'border-l-slate-400' },
-  { id: 3, type: 'invite', title: 'Mentorship Invite', desc: 'Priya Sharma sent you a connection request.', time: '1d ago', icon: Users, color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-200', borderLeft: 'border-l-slate-400' },
-  { id: 4, type: 'event', title: 'Event Reminder', desc: 'Annual Alumni Meet requires RSVP.', time: '1d ago', icon: Calendar, color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-200', borderLeft: 'border-l-slate-400' }
-]
+// Removed hardcoded activityFeed
 
 const recommendedAlumni = [
   { id: 1, name: 'Priya Sharma', role: 'Senior Product Manager, Microsoft', batch: 'CSE 2018', avatar: 'https://ui-avatars.com/api/?name=Priya+Sharma&background=8C1515&color=fff' },
@@ -55,11 +53,34 @@ function slugify(text) {
     .replace(/\s+/g, '-')
 }
 
+function timeAgo(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now - date) / 1000);
+  
+  if (seconds < 60) return `${seconds}s ago`;
+  
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  
+  return `${Math.floor(months / 12)}y ago`;
+}
+
 export default function Dashboard() {
   const [profile, setProfile] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [recentPosts, setRecentPosts] = useState([])
   const [loadingPosts, setLoadingPosts] = useState(true)
+  const [broadcasts, setBroadcasts] = useState([])
   const { user } = useAuth()
   const nav = useNavigate()
 
@@ -79,6 +100,17 @@ export default function Dashboard() {
     }
 
     loadProfile()
+    return () => { mounted = false }
+  }, [user?.id])
+
+  // Fetch targeted broadcasts
+  useEffect(() => {
+    if (!user?.id) return
+    let mounted = true
+    broadcastApi.fetchUserBroadcastsWithReadState(user.id).then(data => {
+      if (mounted) setBroadcasts(data)
+    }).catch(err => console.error("Error fetching broadcasts:", err))
+    
     return () => { mounted = false }
   }, [user?.id])
 
@@ -108,12 +140,13 @@ export default function Dashboard() {
     <div className="min-h-screen bg-slate-50 pb-12">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 w-full">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             Welcome back, {loadingProfile ? 'Member' : (profile?.full_name?.split(' ')[0] || 'Member')}!
           </h1>
           <p className="text-slate-500 mt-1.5 font-medium">Here's what's currently happening in your alumni network.</p>
         </div>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
@@ -201,32 +234,43 @@ export default function Dashboard() {
                   <h2 className="text-lg font-bold text-slate-900">Activity Feed</h2>
                 </div>
                 {/* Real-time badge count */}
-                <span className="flex items-center justify-center w-5 h-5 bg-[var(--cardinal)] text-white text-xs font-bold rounded-full animate-pulse shadow-sm shadow-red-200">
-                  {activityFeed.length}
-                </span>
+                {broadcasts.filter(b => !b.isRead).length > 0 && (
+                  <span className="flex items-center justify-center w-5 h-5 bg-[var(--cardinal)] text-white text-xs font-bold rounded-full animate-pulse shadow-sm shadow-red-200">
+                    {broadcasts.filter(b => !b.isRead).length}
+                  </span>
+                )}
               </div>
 
               {/* Scrollable independent column */}
               <div className="flex-1 overflow-y-auto p-5 space-y-4 feed-scrollbar bg-slate-50/30">
-                {activityFeed.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`p-4 rounded-xl border-l-[3px] border-t border-r border-b ${item.border} ${item.borderLeft} bg-white shadow-sm hover:shadow-md transition-all relative overflow-hidden group cursor-pointer`}
-                  >
-                    <div className="flex gap-3.5">
-                      <div className={`mt-0.5 w-8 h-8 rounded-full ${item.bg} ${item.color} flex items-center justify-center shrink-0`}>
-                        <item.icon className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-1 gap-2">
-                          <h3 className="text-sm font-bold text-slate-900">{item.title}</h3>
-                          <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap">{item.time}</span>
-                        </div>
-                        <p className="text-xs text-slate-600 leading-relaxed font-medium">{item.desc}</p>
-                      </div>
-                    </div>
+                {broadcasts.length === 0 ? (
+                  <div className="text-center py-10 flex flex-col items-center justify-center h-full">
+                    <Bell className="w-10 h-10 text-slate-200 mb-3" />
+                    <p className="text-sm font-medium text-slate-500">You're all caught up</p>
+                    <p className="text-xs text-slate-400 mt-1">No announcements available.</p>
                   </div>
-                ))}
+                ) : (
+                  broadcasts.map((item) => (
+                    <Link
+                      to={`/announcements/${item.id}`}
+                      key={item.id}
+                      className={`block p-4 rounded-xl border-l-[3px] border-t border-r border-b border-slate-200 ${item.isRead ? 'bg-white border-l-slate-300' : 'bg-blue-50/50 border-l-[var(--cardinal)]'} shadow-sm hover:shadow-md transition-all relative overflow-hidden group cursor-pointer`}
+                    >
+                      <div className="flex gap-3.5">
+                        <div className={`mt-0.5 w-8 h-8 rounded-full ${item.isRead ? 'bg-slate-100 text-slate-600' : 'bg-red-100 text-[var(--cardinal)]'} flex items-center justify-center shrink-0`}>
+                          <Megaphone className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-1 gap-2">
+                            <h3 className={`text-sm ${item.isRead ? 'font-semibold text-slate-700' : 'font-bold text-slate-900'}`}>{item.title}</h3>
+                            <span className={`text-[10px] font-bold whitespace-nowrap ${item.isRead ? 'text-slate-400' : 'text-slate-500'}`}>{timeAgo(item.created_at)}</span>
+                          </div>
+                          <p className={`text-xs leading-relaxed ${item.isRead ? 'text-slate-500 font-medium' : 'text-slate-600 font-semibold'} line-clamp-2`}>{item.content}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                )}
 
                 {/* Embedded style for scrollbar */}
                 <style dangerouslySetInnerHTML={{
@@ -245,13 +289,6 @@ export default function Dashboard() {
                     background-color: #94a3b8;
                   }
                 `}} />
-              </div>
-
-              {/* Footer */}
-              <div className="p-4 border-t border-slate-100 shrink-0 bg-white rounded-b-2xl">
-                <button className="w-full text-center text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
-                  Mark all as read
-                </button>
               </div>
             </div>
           </div>

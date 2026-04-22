@@ -178,10 +178,10 @@ export default function UnifiedProfileCard({ profile, loadingProfile }) {
           {/* Skills */}
           <div>
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Core Skills</h3>
-            {profile?.skills ? (
+            {profile?.skills && profile.skills.length > 0 ? (
               <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {profile.skills.split(',').map((skill, idx) => (
-                  <span key={idx} className="bg-slate-50 border border-slate-200 text-slate-600 px-2.5 py-1 rounded-md text-xs font-semibold shadow-sm">{skill.trim()}</span>
+                {(Array.isArray(profile.skills) ? profile.skills : typeof profile.skills === 'string' ? profile.skills.split(',') : []).map((skill, idx) => (
+                  <span key={idx} className="bg-slate-50 border border-slate-200 text-slate-600 px-2.5 py-1 rounded-md text-xs font-semibold shadow-sm">{String(skill).trim()}</span>
                 ))}
               </div>
             ) : (

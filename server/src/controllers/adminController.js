@@ -192,3 +192,60 @@ exports.exportUsersExcel = async (req, res) => {
         res.status(500).json({ message: 'Server error exporting users' });
     }
 };
+
+// Send Broadcast Email via Nodemailer
+exports.sendBroadcastEmail = async (req, res) => {
+    try {
+        const { title, content, target_role, target_branch, target_year } = req.body;
+        
+        let query = supabaseAdmin.from('profiles').select('email').not('email', 'is', null);
+
+        if (target_role && target_role !== 'All') {
+            query = query.eq('user_type', target_role);
+        }
+        if (target_branch && target_branch !== 'All') {
+            query = query.eq('branch', target_branch);
+        }
+        if (target_year && target_year !== 'All') {
+            query = query.eq('graduation_year', target_year);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const emails = data.map(profile => profile.email).filter(Boolean);
+
+        if (emails.length > 0) {
+            const nodemailer = require('nodemailer');
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS,
+                },
+            });
+
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: process.env.EMAIL_USER, // dummy "to" address
+                bcc: emails, // sending to all matching profiles
+                subject: `Announcement: ${title}`,
+                text: content,
+                html: `<h3>${title}</h3><p>${content.replace(/\n/g, '<br/>')}</p>`
+            };
+
+            transporter.sendMail(mailOptions, (err, info) => {
+                if (err) {
+                    console.error('Error sending broadcast email via nodemailer:', err);
+                } else {
+                    console.log('Broadcast emails sent to', emails.length, 'users');
+                }
+            });
+        }
+
+        res.status(200).json({ message: 'Broadcast emails queued successfully', count: emails.length });
+    } catch (error) {
+        console.error('Error in sendBroadcastEmail:', error);
+        res.status(500).json({ message: 'Server error sending broadcast emails' });
+    }
+};

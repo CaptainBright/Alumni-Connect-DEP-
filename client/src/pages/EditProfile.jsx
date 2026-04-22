@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { profileService } from '../services/profileService';
-import { Save, ArrowLeft, User, BookOpen, Sparkles } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
+import { Save, ArrowLeft, User, BookOpen, Sparkles, Camera, Loader2 } from 'lucide-react';
 
 export default function EditProfile() {
     const { user } = useAuth();
@@ -22,7 +23,11 @@ export default function EditProfile() {
         skills: '',
         interests: '',
         career_goals: '',
+        avatar_url: '',
     });
+
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const fileInputRef = React.useRef(null);
 
     useEffect(() => {
         let mounted = true;
@@ -41,6 +46,7 @@ export default function EditProfile() {
                         skills: data.skills || '',
                         interests: data.interests || '',
                         career_goals: data.career_goals || '',
+                        avatar_url: data.avatar_url || '',
                     });
                 }
             } catch (err) {
@@ -90,6 +96,44 @@ export default function EditProfile() {
         }
     };
 
+    const handleAvatarUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !user?.id) return;
+
+        try {
+            setUploadingAvatar(true);
+            const fileExt = file.name.split('.').pop();
+            const fileName = `avatars/${user.id}-${Date.now()}.${fileExt}`;
+        
+            const { error: uploadError } = await supabase.storage
+                .from('message_attachments')
+                .upload(fileName, file);
+                
+            if (uploadError) throw uploadError;
+            
+            const { data: { publicUrl } } = supabase.storage
+                .from('message_attachments')
+                .getPublicUrl(fileName);
+                
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ avatar_url: publicUrl })
+                .eq('id', user.id);
+                
+            if (updateError) throw updateError;
+            
+            setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
+            setToastMessage({ type: 'success', text: 'Profile picture updated!' });
+            
+        } catch (err) {
+            console.error('Failed to upload avatar', err);
+            setToastMessage({ type: 'error', text: 'Failed to upload profile picture. Try again.' });
+        } finally {
+            setUploadingAvatar(false);
+            e.target.value = null;
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -133,6 +177,34 @@ export default function EditProfile() {
                 )}
 
                 <form onSubmit={handleSave} className="space-y-6">
+
+                    {/* Profile Picture Section */}
+                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col items-center justify-center">
+                        <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()} title="Change Profile Picture">
+                            <img 
+                                src={formData.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(formData.full_name || 'User')}`} 
+                                alt="My Profile" 
+                                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md group-hover:brightness-75 transition-all" 
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera className="w-8 h-8 text-white drop-shadow-md" />
+                            </div>
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                className="hidden" 
+                                accept="image/png, image/jpeg, image/jpg" 
+                                onChange={handleAvatarUpload}
+                                disabled={uploadingAvatar}
+                            />
+                            {uploadingAvatar && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
+                                    <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                </div>
+                            )}
+                        </div>
+                        <p className="mt-3 text-sm font-semibold text-slate-500">Click to change avatar</p>
+                    </div>
 
                     {/* Personal Info */}
                     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">

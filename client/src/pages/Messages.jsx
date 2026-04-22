@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ChatSidebar from '../components/messaging/ChatSidebar';
 import ChatWindow from '../components/messaging/ChatWindow';
-import AlumniActivityPanel from '../components/messaging/AlumniActivityPanel';
 import { useAuth } from '../hooks/useAuth';
 import { messagingApi } from '../api/messagingApi';
 import { connectionApi } from '../api/connectionApi';
@@ -70,8 +69,8 @@ export default function Messages() {
       {/* 3-Column LinkedIn/WhatsApp Hybrid Layout */}
       <div className="w-full max-w-[1500px] h-[85vh] flex bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         
-        {/* LEFT COLUMN: Sidebar (Connections) - 25% width */}
-        <div className="w-full md:w-[35%] lg:w-[25%] border-r border-slate-200 flex flex-col bg-white relative">
+        {/* LEFT COLUMN: Sidebar (Connections) - 35% width on md, 30% on lg */}
+        <div className="w-full md:w-[35%] lg:w-[30%] border-r border-slate-200 flex flex-col bg-white relative">
           {loading && (
             <div className="absolute inset-0 z-10 bg-white/50 backdrop-blur-sm flex items-center justify-center">
               <Loader2 className="w-6 h-6 animate-spin text-[var(--cardinal)]" />
@@ -85,8 +84,8 @@ export default function Messages() {
           />
         </div>
 
-        {/* CENTER COLUMN: Chat Window - 50% width */}
-        <div className="hidden md:flex md:w-[65%] lg:w-[50%] flex-col bg-slate-50 relative">
+        {/* CENTER COLUMN: Chat Window - 65% width on md, 70% on lg */}
+        <div className="hidden md:flex md:w-[65%] lg:w-[70%] flex-col bg-slate-50 relative">
           {activeConversation ? (
             <ChatWindow 
               conversation={activeConversation} 
@@ -113,11 +112,6 @@ export default function Messages() {
               </p>
             </div>
           )}
-        </div>
-
-        {/* RIGHT COLUMN: Alumni Activity Feed - 25% width */}
-        <div className="hidden lg:flex lg:w-[25%] flex-col bg-slate-50">
-          <AlumniActivityPanel />
         </div>
         
       </div>

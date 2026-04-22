@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Download, Sparkles, Pencil, Trash2, X, Check, Smile } from 'lucide-react';
+import { Download, Sparkles, Pencil, Trash2, X, Check, Smile, FileText, FileArchive, File } from 'lucide-react';
 
 export default function MessageBubble({ message, isOwnMessage, currentUserAvatar, onEdit, onDelete, onReact }) {
   const { id, content, attachment_url, is_career_insight, created_at, sender, is_edited, reaction } = message;
   const deliveryTime = new Date(created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const isImageAttachment = attachment_url && attachment_url.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i);
+  const isPdfAttachment = attachment_url && attachment_url.match(/\.pdf(\?.*)?$/i);
+  const isDocAttachment = attachment_url && attachment_url.match(/\.(doc|docx)(\?.*)?$/i);
+  const isZipAttachment = attachment_url && attachment_url.match(/\.zip(\?.*)?$/i);
   
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(content);
@@ -41,7 +44,7 @@ export default function MessageBubble({ message, isOwnMessage, currentUserAvatar
             ${is_career_insight 
               ? 'border border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-900' 
               : isOwnMessage 
-                ? 'bg-gradient-to-br from-[#8C1515] to-[#7a1212] text-white shadow-md' 
+                ? 'bg-[#d9fdd3] text-slate-800 shadow-sm border border-[#c4eabf]' 
                 : 'bg-white border border-slate-200 text-slate-800 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]'
             }
             ${isOwnMessage ? 'rounded-br-[4px]' : 'rounded-bl-[4px]'}
@@ -80,24 +83,32 @@ export default function MessageBubble({ message, isOwnMessage, currentUserAvatar
           {/* Attachment Render Snippet */}
           {attachment_url && (
             isImageAttachment ? (
-              <div className={`mt-3 relative rounded-xl overflow-hidden border shadow-sm max-w-sm ${isOwnMessage ? 'border-white/20' : 'border-slate-200'}`}>
+              <div className={`mt-3 relative rounded-xl overflow-hidden border shadow-sm max-w-sm border-slate-200`}>
                 <a href={attachment_url} target="_blank" rel="noopener noreferrer">
                   <img src={attachment_url} alt="Attached file" className="w-full h-auto object-cover max-h-64 hover:opacity-95 transition-opacity" />
                 </a>
               </div>
             ) : (
-              <div className={`mt-3 p-2.5 rounded-xl border flex items-center justify-between gap-3 ${isOwnMessage ? 'bg-black/10 border-black/10' : 'bg-slate-50 border-slate-200'}`}>
-                <div className="flex flex-col overflow-hidden text-sm w-full">
-                  <span className={`font-bold truncate ${isOwnMessage ? 'text-white' : 'text-slate-800'}`}>
-                    Attached File
-                  </span>
-                  <span className={`text-[11px] truncate ${isOwnMessage ? 'text-white/80' : 'text-slate-500'}`}>Click to download</span>
+              <div className={`mt-3 p-2.5 rounded-xl border flex items-center justify-between gap-3 bg-white/50 border-slate-200/60`}>
+                <div className="flex items-center gap-3 overflow-hidden text-sm w-full">
+                  <div className={`p-2 rounded-lg flex-shrink-0 bg-slate-200/50 text-slate-600`}>
+                    {isPdfAttachment ? <FileText className="w-5 h-5 text-red-500" /> : 
+                     isDocAttachment ? <FileText className="w-5 h-5 text-blue-500" /> :
+                     isZipAttachment ? <FileArchive className="w-5 h-5 text-amber-500" /> :
+                     <File className="w-5 h-5" />}
+                  </div>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className={`font-bold truncate text-slate-800`}>
+                      Attached File
+                    </span>
+                    <span className={`text-[11px] truncate text-slate-500`}>Click to download</span>
+                  </div>
                 </div>
                 <a 
                   href={attachment_url} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className={`p-1.5 rounded-full flex-shrink-0 transition-colors ${isOwnMessage ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-slate-200 hover:bg-slate-300 text-slate-600'}`}
+                  className={`p-1.5 rounded-full flex-shrink-0 transition-colors bg-[var(--cardinal)] hover:bg-red-800 text-white shadow-sm`}
                 >
                   <Download className="w-4 h-4" />
                 </a>

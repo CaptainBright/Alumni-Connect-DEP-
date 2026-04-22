@@ -2,12 +2,16 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { fetchProfiles, approveProfile, rejectProfile, exportUsersExcel } from '../api/adminApi'
+import AdminBroadcastPanel from '../components/admin/AdminBroadcastPanel'
 
 export default function AdminDashboard() {
   const [pendingProfiles, setPendingProfiles] = useState([])
   const [approvedProfiles, setApprovedProfiles] = useState([])
   const [rejectedProfiles, setRejectedProfiles] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  // Navigation Tabs
+  const [mainTab, setMainTab] = useState('approvals') // 'approvals' | 'broadcasts'
   const [activeTab, setActiveTab] = useState('pending')
   const [adminNotes, setAdminNotes] = useState({})
 
@@ -136,14 +140,33 @@ export default function AdminDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <StatCard label="Pending" value={pendingProfiles.length} color="text-amber-600" />
-          <StatCard label="Approved" value={approvedProfiles.length} color="text-emerald-600" />
-          <StatCard label="Rejected" value={rejectedProfiles.length} color="text-rose-600" />
-          <StatCard label="Total Reviewed" value={approvedProfiles.length + rejectedProfiles.length} color="text-indigo-600" />
-        </section>
+        
+        {/* Main Tabs */}
+        <div className="flex items-center gap-4 border-b border-slate-200 mb-6 pb-2">
+          <button 
+            onClick={() => setMainTab('approvals')}
+            className={`pb-2 px-2 text-lg font-bold border-b-2 transition-colors ${mainTab === 'approvals' ? 'border-[var(--cardinal)] text-[var(--cardinal)]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            User Approvals
+          </button>
+          <button 
+            onClick={() => setMainTab('broadcasts')}
+            className={`pb-2 px-2 text-lg font-bold border-b-2 transition-colors ${mainTab === 'broadcasts' ? 'border-[var(--cardinal)] text-[var(--cardinal)]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            Broadcast Messaging
+          </button>
+        </div>
 
-        {/* ──── Export Section ──── */}
+        {mainTab === 'approvals' ? (
+          <>
+            <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <StatCard label="Pending" value={pendingProfiles.length} color="text-amber-600" />
+              <StatCard label="Approved" value={approvedProfiles.length} color="text-emerald-600" />
+              <StatCard label="Rejected" value={rejectedProfiles.length} color="text-rose-600" />
+              <StatCard label="Total Reviewed" value={approvedProfiles.length + rejectedProfiles.length} color="text-indigo-600" />
+            </section>
+
+            {/* ──── Export Section ──── */}
         <section className="mt-6 bg-white rounded-2xl border border-slate-200 p-6">
           <h2 className="text-lg font-bold text-slate-900 mb-1">Export User Data</h2>
           <p className="text-sm text-slate-500 mb-4">
@@ -235,8 +258,8 @@ export default function AdminDashboard() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 rounded-lg capitalize font-medium transition ${activeTab === tab
-                    ? 'bg-[var(--cardinal)] text-white'
-                    : 'text-slate-600 hover:bg-slate-100'
+                  ? 'bg-[var(--cardinal)] text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
                   }`}
               >
                 {tab}
@@ -264,6 +287,10 @@ export default function AdminDashboard() {
             )}
           </div>
         </section>
+          </>
+        ) : (
+          <AdminBroadcastPanel uniqueYears={uniqueYears} uniqueBranches={uniqueBranches} />
+        )}
       </main>
     </div>
   )
@@ -287,10 +314,10 @@ function ProfileCard({ profile, isPending, noteValue, onNoteChange, onApprove, o
           <p className="text-sm text-slate-600">{profile.email || 'No email'}</p>
         </div>
         <span className={`px-2 py-1 text-xs rounded-full font-semibold ${profile.approval_status === 'APPROVED'
-            ? 'bg-emerald-100 text-emerald-700'
-            : profile.approval_status === 'REJECTED'
-              ? 'bg-rose-100 text-rose-700'
-              : 'bg-amber-100 text-amber-700'
+          ? 'bg-emerald-100 text-emerald-700'
+          : profile.approval_status === 'REJECTED'
+            ? 'bg-rose-100 text-rose-700'
+            : 'bg-amber-100 text-amber-700'
           }`}>
           {profile.approval_status}
         </span>

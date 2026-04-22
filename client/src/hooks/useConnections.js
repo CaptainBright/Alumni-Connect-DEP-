@@ -28,9 +28,9 @@ export function useConnections() {
         // If I received it, and it's pending, I might want to know it's "INCOMING_PENDING" vs "OUTGOING_PENDING".
         // For simplicity, let's just mark the relationship status
         if (conn.status === 'PENDING') {
-           statusMap[otherId] = conn.requester.id === user.id ? 'PENDING_SENT' : 'PENDING_RECEIVED';
+          statusMap[otherId] = conn.requester.id === user.id ? 'PENDING_SENT' : 'PENDING_RECEIVED';
         } else {
-           statusMap[otherId] = conn.status; // 'ACCEPTED' etc.
+          statusMap[otherId] = conn.status; // 'ACCEPTED' etc.
         }
       });
       setConnectionStatusMap(statusMap);

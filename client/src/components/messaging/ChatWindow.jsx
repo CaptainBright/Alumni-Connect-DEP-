@@ -175,9 +175,11 @@ export default function ChatWindow({ conversation, currentUser, onConversationCr
         ) : (
           <div className="max-w-4xl mx-auto flex flex-col justify-end min-h-full">
             {messages.length === 0 ? (
-              <div className="text-center text-slate-400 text-sm py-10 flex flex-col items-center">
-                <p className="mb-2">This is the beginning of your professional conversation with <span className="font-bold text-slate-700">{conversation.participant.full_name}</span>.</p>
-                <p className="text-xs text-slate-400">Select a quick reply below or type your own message to start!</p>
+              <div className="text-center py-6 flex flex-col items-center">
+                <div className="bg-yellow-50 text-yellow-800 text-[11px] font-medium px-4 py-2 rounded-lg max-w-xs shadow-sm border border-yellow-100 flex items-center justify-center gap-2">
+                  <span className="text-sm">🔒</span>
+                  Messages and calls are end-to-end encrypted. No one outside of this chat can read or listen to them.
+                </div>
               </div>
             ) : (
               messages.map((msg) => (

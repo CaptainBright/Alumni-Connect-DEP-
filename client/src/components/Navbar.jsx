@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Bell, ChevronDown, Home, Menu, MessageCircle, Search, User, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { messagingApi } from '../api/messagingApi'
+import { broadcastApi } from '../api/broadcastApi'
+import { supabase } from '../lib/supabaseClient'
 
 const publicMenus = [
   {
@@ -114,6 +116,7 @@ export default function Navbar() {
   const [mobileAccordion, setMobileAccordion] = useState(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
+  const [unreadAnnouncements, setUnreadAnnouncements] = useState(0)
   const profileRef = useRef(null)
 
   const isLoggedIn = authStatus !== 'guest' && authStatus !== 'loading'
@@ -148,13 +151,28 @@ export default function Navbar() {
     const fetchUnread = () => {
       if (isLoggedIn && user?.id) {
         messagingApi.getUnreadMessageCount(user.id).then(count => setUnreadMessages(count));
+        broadcastApi.getUnreadCount(user.id).then(count => setUnreadAnnouncements(count));
       }
     };
     
     fetchUnread();
     
     window.addEventListener('messagesRead', fetchUnread);
-    return () => window.removeEventListener('messagesRead', fetchUnread);
+
+    let channel = null;
+    if (isLoggedIn && user?.id) {
+      channel = supabase
+        .channel('navbar_unread')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user.id}` }, () => {
+          fetchUnread();
+        })
+        .subscribe();
+    }
+
+    return () => {
+      window.removeEventListener('messagesRead', fetchUnread);
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [isLoggedIn, user?.id, location.pathname]);
 
   const handleLogout = async () => {
@@ -202,9 +220,11 @@ export default function Navbar() {
 
               {isLoggedIn && (
                 <>
-                  <button type="button" className="icon-btn relative" aria-label="Notifications">
+                  <button type="button" onClick={() => navigate('/dashboard')} className="icon-btn relative" aria-label="Notifications">
                     <Bell size={20} />
-                    <span className="notif-badge">4</span>
+                    {unreadAnnouncements > 0 && (
+                      <span className="notif-badge">{unreadAnnouncements > 99 ? '99+' : unreadAnnouncements}</span>
+                    )}
                   </button>
                   <Link to="/messages" className="icon-btn relative" aria-label="Messages">
                     <MessageCircle size={20} />
@@ -224,6 +244,9 @@ export default function Navbar() {
                     </button>
                     {profileOpen && (
                       <div className="dropdown-panel absolute right-0 top-[46px] w-52 rounded-xl border border-slate-600 bg-[#1F2A44] p-2 z-50">
+                        {authStatus === 'admin' && (
+                          <Link to="/admin" className="block rounded-lg px-3 py-2 text-sm text-red-400 font-bold hover:bg-[#2E3B5B]">Admin Dashboard</Link>
+                        )}
                         <Link to="/dashboard" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">My Profile</Link>
                         <Link to="/edit-profile" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Edit Profile</Link>
                         <Link to="/jobs" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Applications</Link>

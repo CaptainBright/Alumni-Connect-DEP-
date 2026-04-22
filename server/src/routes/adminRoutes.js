@@ -7,5 +7,6 @@ router.get('/profiles', protect, adminOnly, adminController.getProfiles);
 router.post('/approve', protect, adminOnly, adminController.approveProfile);
 router.post('/reject', protect, adminOnly, adminController.rejectProfile);
 router.get('/export-users', protect, adminOnly, adminController.exportUsersExcel);
+router.post('/broadcast/email', protect, adminOnly, adminController.sendBroadcastEmail);
 
 module.exports = router;

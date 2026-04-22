@@ -22,6 +22,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import PendingApproval from './pages/PendingApproval'
+import AnnouncementDetail from './pages/AnnouncementDetail'
 
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -52,6 +53,7 @@ export default function App() {
             element={<ProtectedRoute allow={["approved", "admin"]} />}
           >
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/announcements/:id" element={<AnnouncementDetail />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/directory" element={<Directory />} />
