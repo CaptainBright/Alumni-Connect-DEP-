@@ -26,21 +26,8 @@ function createSupabaseAuthClient() {
     });
 }
 
-// Configure Nodemailer Transporter
-// IMPORTANT: You need to set EMAIL_USER and EMAIL_PASS in your .env file
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-    family: 4, // Force IPv4 to avoid Render's ENETUNREACH IPv6 issue
-    connectionTimeout: 10000, // 10 seconds timeout for connecting
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-});
+// Nodemailer transporter has been removed.
+// Emails are proxied to Vercel serverless function to bypass Render SMTP block.
 
 function normalizeRegistrationType(value) {
     const normalized = (value || '').toString().trim().toLowerCase();
@@ -285,21 +272,34 @@ exports.sendOtp = async (req, res) => {
             return res.status(500).json({ message: 'Failed to save OTP' });
         }
 
-        // Send Email
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Your Password Reset OTP',
-            text: `Your OTP for password reset is: ${otp}. It is valid for 5 minutes.`,
-        };
+        // Proxy email sending to Vercel Serverless Function
+        const proxyUrl = `${process.env.FRONTEND_URL || 'https://alumni-connect-dep.vercel.app'}/api/send-email`;
+        console.log(`[sendOtp] Proxying email to Vercel at ${proxyUrl}...`);
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('Error sending email:', error);
-                return res.status(500).json({ message: 'Failed to send OTP email' });
+        try {
+            const proxyResponse = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': process.env.EMAIL_API_KEY || ''
+                },
+                body: JSON.stringify({
+                    to: email,
+                    subject: 'Your Password Reset OTP',
+                    text: `Your OTP for password reset is: ${otp}. It is valid for 5 minutes.`
+                })
+            });
+
+            if (!proxyResponse.ok) {
+                const errorData = await proxyResponse.text();
+                throw new Error(`Vercel responded with ${proxyResponse.status}: ${errorData}`);
             }
+
             res.status(200).json({ message: 'OTP sent successfully' });
-        });
+        } catch (err) {
+            console.error('Error proxying email to Vercel:', err);
+            return res.status(500).json({ message: 'Failed to send OTP email via Vercel proxy' });
+        }
 
     } catch (error) {
         console.error('Send OTP Error:', error);
@@ -469,7 +469,6 @@ exports.sendRegisterOtp = async (req, res) => {
         }
 
         // Generate 6-digit OTP
-        console.log(`[sendRegisterOtp] Generating OTP for ${normalizedEmail}...`);
         const otp = otpGenerator.generate(6, {
             upperCaseAlphabets: false,
             specialChars: false,
@@ -477,7 +476,6 @@ exports.sendRegisterOtp = async (req, res) => {
         });
 
         // Save/Update OTP in 'otps' table
-        console.log(`[sendRegisterOtp] Saving OTP to Supabase for ${normalizedEmail}...`);
         await supabaseAdmin.from('otps').delete().eq('email', normalizedEmail);
 
         const { error: dbError } = await supabaseAdmin
@@ -489,22 +487,34 @@ exports.sendRegisterOtp = async (req, res) => {
             return res.status(500).json({ message: 'Failed to save OTP' });
         }
 
-        console.log(`[sendRegisterOtp] Preparing to send email via Nodemailer to ${normalizedEmail}...`);
-        // Send Email
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: normalizedEmail,
-            subject: 'Verify your email for Alumni Connect',
-            text: `Welcome to Alumni Connect! Your verification code is: ${otp}`,
-        };
+        // Proxy email sending to Vercel Serverless Function
+        const proxyUrl = `${process.env.FRONTEND_URL || 'https://alumni-connect-dep.vercel.app'}/api/send-email`;
+        console.log(`[sendRegisterOtp] Proxying email to Vercel at ${proxyUrl}...`);
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('Error sending email:', error);
-                return res.status(500).json({ message: 'Failed to send verification email' });
+        try {
+            const proxyResponse = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': process.env.EMAIL_API_KEY || ''
+                },
+                body: JSON.stringify({
+                    to: normalizedEmail,
+                    subject: 'Verify your email for Alumni Connect',
+                    text: `Welcome to Alumni Connect! Your verification code is: ${otp}`
+                })
+            });
+
+            if (!proxyResponse.ok) {
+                const errorData = await proxyResponse.text();
+                throw new Error(`Vercel responded with ${proxyResponse.status}: ${errorData}`);
             }
+
             res.status(200).json({ message: 'Verification code sent to your email' });
-        });
+        } catch (err) {
+            console.error('Error proxying email to Vercel:', err);
+            return res.status(500).json({ message: 'Failed to send verification email via Vercel proxy' });
+        }
 
     } catch (error) {
         console.error('Send Register OTP Error:', error);
