@@ -3,11 +3,6 @@ const nodemailer = require('nodemailer');
 const otpGenerator = require('otp-generator');
 const jwt = require('jsonwebtoken');
 const { generateToken } = require('../utils/jwt');
-const dns = require('dns');
-
-// Force Node.js to use IPv4 first to prevent ENETUNREACH errors on Render for IPv6 addresses
-dns.setDefaultResultOrder('ipv4first');
-
 // const OTP = require('../models/otpModel'); // No longer needed
 
 // Initialize Supabase Admin Client
@@ -41,6 +36,7 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
+    family: 4, // Force IPv4 to avoid Render's ENETUNREACH IPv6 issue
     connectionTimeout: 10000, // 10 seconds timeout for connecting
     greetingTimeout: 10000,
     socketTimeout: 10000,
