@@ -4,7 +4,7 @@ const API_BASE = import.meta.env.VITE_SERVER_URL || 'http://localhost:5001'
 
 const client = axios.create({
   baseURL: `${API_BASE}/api/experiences`,
-  timeout: 15000,
+  timeout: 60000,
   withCredentials: true,
 })
 
