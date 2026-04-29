@@ -50,13 +50,13 @@ export default function Navbar() {
   // Build menus dynamically for logged-in users
   const menus = isLoggedIn
     ? [
-        { label: 'Home', to: '/dashboard', icon: Home },
-        { label: 'Alumni Directory', to: '/network' },
-        { label: 'Job Board', to: '/jobs' },
-        { label: 'Events', to: '/events' },
-        { label: 'Resources', to: '/resources' },
-        ...(isAdmin ? [{ label: 'Approvals', to: '/admin', icon: ShieldCheck }] : []),
-      ]
+      { label: 'Home', to: '/dashboard', icon: Home },
+      { label: 'Alumni Directory', to: '/network' },
+      { label: 'Job Board', to: '/jobs' },
+      { label: 'Events', to: '/events' },
+      { label: 'Resources', to: '/resources' },
+      ...(isAdmin ? [{ label: 'Approvals', to: '/admin', icon: ShieldCheck }] : []),
+    ]
     : publicMenus
 
   React.useEffect(() => {
@@ -84,9 +84,9 @@ export default function Navbar() {
         broadcastApi.getUnreadCount(user.id).then(count => setUnreadAnnouncements(count));
       }
     };
-    
+
     fetchUnread();
-    
+
     window.addEventListener('messagesRead', fetchUnread);
 
     let channel = null;

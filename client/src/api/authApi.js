@@ -4,7 +4,7 @@ const API_BASE = import.meta.env.VITE_SERVER_AUTH_URL || 'http://localhost:5001/
 
 const authClient = axios.create({
   baseURL: API_BASE,
-  timeout: 60000,
+  timeout: 15000,
   withCredentials: true // 🔥 VERY IMPORTANT
 })
 
