@@ -82,8 +82,8 @@ export default function Directory() {
               {isConnectionsTab ? 'My ' : 'Alumni '}<span className="text-[var(--cardinal)]">{isConnectionsTab ? 'Connections' : 'Directory'}</span>
             </h1>
             <p className="mt-4 text-lg text-slate-600 max-w-2xl leading-relaxed">
-              {isConnectionsTab 
-                ? 'Stay in touch with your professional network and manage your alumni connections.' 
+              {isConnectionsTab
+                ? 'Stay in touch with your professional network and manage your alumni connections.'
                 : 'Reconnect with fellow graduates, explore exciting career paths, and expand your professional network across the globe.'}
             </p>
           </div>
@@ -175,7 +175,7 @@ export default function Directory() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* 2. Pending Connections */}
                 {alumni.filter(a => connectionStatusMap[a.id] === 'PENDING_SENT' || connectionStatusMap[a.id] === 'PENDING_RECEIVED').length > 0 && (
                   <div>
