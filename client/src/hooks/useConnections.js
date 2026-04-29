@@ -65,12 +65,27 @@ export function useConnections() {
     }
   }
 
+  async function rejectRequest(connectionId, requesterId) {
+    try {
+      await connectionApi.deleteConnection(connectionId);
+      setConnectionStatusMap(prev => {
+        const newMap = { ...prev };
+        delete newMap[requesterId];
+        return newMap;
+      });
+      fetchConnections();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   return {
     connections,
     connectionStatusMap,
     loading,
     sendConnectionRequest,
     acceptRequest,
+    rejectRequest,
     refreshConnections: fetchConnections
   };
 }

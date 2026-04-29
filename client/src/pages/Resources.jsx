@@ -16,7 +16,7 @@ const collections = [
     title: 'Higher Studies Toolkit',
     category: 'Education',
     description: 'GRE/TOEFL resources, SOP examples, and alumni profiles from global universities.',
-    link: '#',
+    link: '/resources',
     image: '/higherstudies.png',
     alt: 'Higher Studies Toolkit thumbnail'
   },
@@ -24,7 +24,7 @@ const collections = [
     title: 'Startup and Research Hub',
     category: 'Entrepreneurship',
     description: 'Founder stories, funding resources, and collaborative research opportunities.',
-    link: '#',
+    link: '/resources',
     image: '/startupandresearchhub.png',
     alt: 'Startup and Research Hub thumbnail'
   }
@@ -175,20 +175,20 @@ export default function Resources() {
           {liveMessage}
         </div>
 
-        <section className="relative h-[260px] rounded-2xl overflow-hidden border border-slate-200 mb-8 watch-animate opacity-0">
+        <section className="relative h-[300px] rounded-[32px] overflow-hidden border border-slate-200 mb-12 watch-animate opacity-0 shadow-lg">
           <img
             src="/resources.png"
             alt="Resources hero"
             loading="lazy"
             className="w-full h-full object-cover object-center"
-            style={{ transform: `translateY(${heroParallax}px) scale(1.04)` }}
+            style={{ transform: `translateY(${heroParallax}px) scale(1.05)` }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#2E3B55]/85 via-[#2E3B55]/60 to-black/35" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--cardinal)] via-red-900/80 to-transparent" />
           <div className="absolute inset-0 flex items-center">
-            <div className="px-8 md:px-10">
-              <h1 className="text-4xl md:text-5xl font-extrabold text-white">Resources and Library</h1>
-              <p className="mt-3 text-slate-100 max-w-2xl">
-                Find guides, playbooks, research, and career resources from the IIT Ropar alumni network.
+            <div className="px-8 md:px-16">
+              <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4" style={{ fontFamily: '"Playfair Display", serif' }}>Resource Library</h1>
+              <p className="mt-3 text-red-50 max-w-xl text-lg leading-relaxed">
+                Unlock exclusive career playbooks, research materials, and guides crafted by the IIT Ropar alumni network.
               </p>
             </div>
           </div>
@@ -220,7 +220,7 @@ export default function Resources() {
           {filteredCollections.map((item, idx) => (
             <article
               key={item.title}
-              className="group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-md card-hover-shadow hover:shadow-xl hover:-translate-y-[6px] transition-all duration-300 watch-animate opacity-0 cursor-pointer"
+              className="group bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-[0_8px_30px_rgba(140,21,21,0.12)] hover:-translate-y-2 transition-all duration-300 watch-animate opacity-0 cursor-pointer flex flex-col"
               role="button"
               aria-labelledby={`card-${idx}-title`}
               tabIndex={0}
@@ -236,17 +236,19 @@ export default function Resources() {
                 onLoaded={() => setImagesLoaded((prev) => prev + 1)}
               />
 
-              <div className="p-5">
-                <span className="inline-flex mb-3 px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-xs font-medium">
-                  {item.category}
-                </span>
-                <h3 id={`card-${idx}-title`} className="text-xl font-bold text-slate-900">{item.title}</h3>
-                <p className="mt-2 text-sm text-slate-600">{item.description}</p>
+              <div className="p-6 flex flex-col flex-1">
+                <div className="mb-4">
+                  <span className="inline-flex px-3 py-1 rounded-full bg-red-50 text-[var(--cardinal)] text-xs font-bold uppercase tracking-wider">
+                    {item.category}
+                  </span>
+                </div>
+                <h3 id={`card-${idx}-title`} className="text-2xl font-bold text-slate-900 mb-3">{item.title}</h3>
+                <p className="text-sm text-slate-600 flex-1 leading-relaxed">{item.description}</p>
 
-                <div className="mt-5">
+                <div className="mt-6 pt-6 border-t border-slate-100">
                   <button
                     type="button"
-                    className="inline-flex items-center gap-2 px-4 py-[10px] rounded-lg bg-[#8C1515] text-white font-medium hover:bg-[#6A0F0F] focus:outline-none focus:ring-2 focus:ring-[#8C1515]"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-[var(--cardinal)] group-hover:text-red-800 transition-colors"
                     aria-label={`Explore ${item.title}`}
                     onClick={(e) => {
                       e.stopPropagation()
@@ -254,7 +256,7 @@ export default function Resources() {
                     }}
                   >
                     Explore Collection
-                    <ArrowRight size={16} />
+                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -268,12 +270,12 @@ export default function Resources() {
             {resourceCategories.map((item) => {
               const Icon = item.icon
               return (
-                <article key={item.title} className="bg-white rounded-xl border border-slate-200 p-5 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                  <div className="w-10 h-10 rounded-full bg-[#2E3B55]/10 text-[#2E3B55] flex items-center justify-center mb-3">
-                    <Icon size={18} />
+                <article key={item.title} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-[0_8px_30px_rgba(140,21,21,0.08)] hover:-translate-y-1 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-xl bg-red-50 text-[var(--cardinal)] flex items-center justify-center mb-4">
+                    <Icon size={24} />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">{item.title}</h3>
-                  <p className="mt-2 text-sm text-slate-600">{item.text}</p>
+                  <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
+                  <p className="mt-2 text-sm text-slate-500 leading-relaxed">{item.text}</p>
                 </article>
               )
             })}
@@ -295,19 +297,24 @@ export default function Resources() {
           </div>
         </section>
 
-        <section className="watch-animate opacity-0 bg-gradient-to-r from-[#2E3B55] to-[#1f2d4a] rounded-2xl p-8 md:p-10 text-white">
-          <p className="text-white/80 text-sm uppercase tracking-wider">Need personalized guidance?</p>
-          <h2 className="text-3xl md:text-4xl font-bold mt-2">Connect with alumni mentors</h2>
-          <p className="mt-3 text-slate-100 max-w-2xl">
-            Connect with alumni mentors for career and higher studies.
-          </p>
-          <Link
-            to="/mentorship"
-            className="inline-flex items-center gap-2 mt-6 px-5 py-3 rounded-lg bg-[#8C1515] text-white font-semibold hover:bg-[#6A0F0F] transition-all duration-300 hover:-translate-y-1"
-          >
-            Find a Mentor
-            <ArrowRight size={16} />
-          </Link>
+        <section className="watch-animate opacity-0 bg-[var(--cardinal)] rounded-[32px] p-8 md:p-12 text-white text-center shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+            <Rocket size={200} />
+          </div>
+          <div className="relative z-10">
+            <p className="text-red-200 text-sm font-bold uppercase tracking-[0.2em]">Need personalized guidance?</p>
+            <h2 className="text-3xl md:text-5xl font-extrabold mt-4" style={{ fontFamily: '"Playfair Display", serif' }}>Connect with alumni mentors</h2>
+            <p className="mt-4 text-red-50 max-w-2xl mx-auto text-lg">
+              Book 1:1 sessions with verified alumni to review your resume, practice interviews, or discuss career pivots.
+            </p>
+            <Link
+              to="/mentorship"
+              className="inline-flex items-center gap-2 mt-8 px-8 py-4 rounded-xl bg-white text-[var(--cardinal)] font-extrabold hover:bg-slate-50 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+            >
+              Find a Mentor
+              <ArrowRight size={18} />
+            </Link>
+          </div>
         </section>
 
         {modalCollection && (

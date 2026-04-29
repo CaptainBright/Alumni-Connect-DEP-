@@ -134,12 +134,13 @@ exports.updateProfile = async (req, res) => {
             .single();
 
         if (error) {
+            console.error('Supabase Admin update error:', error);
             throw error;
         }
 
         res.status(200).json({ message: 'Profile updated successfully', profile: data });
     } catch (error) {
         console.error('Error updating profile:', error);
-        res.status(500).json({ message: 'Server error updating profile' });
+        res.status(500).json({ message: 'Server error updating profile', details: error.message || error });
     }
 };

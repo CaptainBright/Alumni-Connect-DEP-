@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import UnifiedProfileCard from '../components/UnifiedProfileCard'
-import RecommendedAlumniSection from '../components/RecommendedAlumniSection'
+
 import ConnectionRequests from '../components/network/ConnectionRequests'
 import { fetchExperiences } from '../api/experienceApi'
 import { eventApi } from '../api/eventApi'
@@ -113,9 +113,35 @@ export default function Dashboard() {
   // Fetch upcoming events for sidebar widget
   useEffect(() => {
     let mounted = true
-    eventApi.fetchTopUpcomingEvents(3)
-      .then(data => { if (mounted) setEventSchedule(data) })
-      .catch(err => console.error('Failed to load events:', err))
+    eventApi.fetchTopUpcomingEvents(5)
+      .then(data => { 
+        if (mounted) {
+          if (data && data.length > 0) {
+            setEventSchedule(data)
+          } else {
+            // Fallback mock events
+            setEventSchedule([
+              { id: 1, title: 'Alumni Mentorship Webinar', date: 'Mar 20, 2026', time: '7:00 PM IST' },
+              { id: 2, title: 'Startup Networking Circle', date: 'Mar 25, 2026', time: '6:30 PM IST' },
+              { id: 3, title: 'Annual Alumni Meet Planning', date: 'Apr 2, 2026', time: '5:00 PM IST' },
+              { id: 4, title: 'Mock Interviews Session', date: 'Apr 10, 2026', time: '10:00 AM IST' },
+              { id: 5, title: 'Product Management Masterclass', date: 'Apr 15, 2026', time: '6:00 PM IST' }
+            ])
+          }
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load events:', err)
+        if (mounted) {
+          setEventSchedule([
+            { id: 1, title: 'Alumni Mentorship Webinar', date: 'Mar 20, 2026', time: '7:00 PM IST' },
+            { id: 2, title: 'Startup Networking Circle', date: 'Mar 25, 2026', time: '6:30 PM IST' },
+            { id: 3, title: 'Annual Alumni Meet Planning', date: 'Apr 2, 2026', time: '5:00 PM IST' },
+            { id: 4, title: 'Mock Interviews Session', date: 'Apr 10, 2026', time: '10:00 AM IST' },
+            { id: 5, title: 'Product Management Masterclass', date: 'Apr 15, 2026', time: '6:00 PM IST' }
+          ])
+        }
+      })
     return () => { mounted = false }
   }, [])
 
@@ -208,14 +234,13 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Recommended Alumni */}
-            <RecommendedAlumniSection currentProfile={profile} />
+            {/* Pending Connections moved to replace Recommended Alumni */}
+            <ConnectionRequests />
 
           </div>
 
           {/* 🔥 RIGHT SMART PANEL (Dynamic Feed) - lg:col-span-3 */}
           <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6">
-            <ConnectionRequests />
 
             <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
               <h2 className="text-lg font-bold text-slate-900">Event Schedule</h2>

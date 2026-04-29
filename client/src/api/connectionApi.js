@@ -36,5 +36,13 @@ export const connectionApi = {
   async updateStatus(connectionId, newStatus) {
     const { data } = await api.put(`/${connectionId}/status`, { status: newStatus });
     return data.connection;
+  },
+
+  /**
+   * Delete a connection (Reject completely)
+   */
+  async deleteConnection(connectionId) {
+    const { data } = await api.delete(`/${connectionId}`);
+    return data;
   }
 };

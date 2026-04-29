@@ -43,8 +43,8 @@ export default function EditProfile() {
                         company: data.company || '',
                         linkedin: data.linkedin || '',
                         bio: data.bio || '',
-                        skills: data.skills || '',
-                        interests: data.interests || '',
+                        skills: Array.isArray(data.skills) ? data.skills.join(', ') : (data.skills || ''),
+                        interests: Array.isArray(data.interests) ? data.interests.join(', ') : (data.interests || ''),
                         career_goals: data.career_goals || '',
                         avatar_url: data.avatar_url || '',
                     });
@@ -77,8 +77,12 @@ export default function EditProfile() {
                 company: formData.company,
                 linkedin: formData.linkedin,
                 bio: formData.bio,
-                skills: formData.skills,
-                interests: formData.interests,
+                skills: Array.isArray(formData.skills) 
+                    ? formData.skills 
+                    : (formData.skills || '').split(',').map(s => s.trim()).filter(Boolean),
+                interests: Array.isArray(formData.interests) 
+                    ? formData.interests 
+                    : (formData.interests || '').split(',').map(s => s.trim()).filter(Boolean),
                 career_goals: formData.career_goals,
             };
 

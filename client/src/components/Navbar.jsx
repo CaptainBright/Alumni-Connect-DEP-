@@ -180,7 +180,7 @@ export default function Navbar() {
                         <Link to="/dashboard" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">My Profile</Link>
                         <Link to="/edit-profile" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Edit Profile</Link>
                         <Link to="/jobs" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Applications</Link>
-                        <Link to="/edit-profile" className="block rounded-lg px-3 py-2 text-sm text-white hover:bg-[#2E3B5B]">Settings</Link>
+
                         <button onClick={handleLogout} className="w-full text-left rounded-lg px-3 py-2 text-sm text-red-200 hover:bg-red-900/30">Logout</button>
                       </div>
                     )}

@@ -7,5 +7,6 @@ const connectionController = require('../controllers/connectionController');
 router.get('/', protect, connectionController.getUserConnections);
 router.post('/request', protect, connectionController.sendRequest);
 router.put('/:id/status', protect, connectionController.updateStatus);
+router.delete('/:id', protect, connectionController.deleteConnection);
 
 module.exports = router;

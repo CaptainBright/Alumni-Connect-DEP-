@@ -176,23 +176,6 @@ export default function Directory() {
                   </div>
                 )}
 
-                {/* 2. Pending Connections */}
-                {alumni.filter(a => connectionStatusMap[a.id] === 'PENDING_SENT' || connectionStatusMap[a.id] === 'PENDING_RECEIVED').length > 0 && (
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-4 border-b border-slate-200 pb-2">Pending Connections</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {alumni.filter(a => connectionStatusMap[a.id] === 'PENDING_SENT' || connectionStatusMap[a.id] === 'PENDING_RECEIVED').map((member) => (
-                        <AlumniCard
-                          key={member.id}
-                          alumni={member}
-                          currentUserId={user?.id}
-                          connectionStatus={connectionStatusMap[member.id]}
-                          onConnect={() => sendConnectionRequest(member.id)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* 3. Discover (Not Connected) */}
                 {alumni.filter(a => !connectionStatusMap[a.id] || connectionStatusMap[a.id] === 'REJECTED').length > 0 && (
