@@ -3,6 +3,11 @@ const nodemailer = require('nodemailer');
 const otpGenerator = require('otp-generator');
 const jwt = require('jsonwebtoken');
 const { generateToken } = require('../utils/jwt');
+const dns = require('dns');
+
+// Force Node.js to use IPv4 first to prevent ENETUNREACH errors on Render for IPv6 addresses
+dns.setDefaultResultOrder('ipv4first');
+
 // const OTP = require('../models/otpModel'); // No longer needed
 
 // Initialize Supabase Admin Client
@@ -29,11 +34,16 @@ function createSupabaseAuthClient() {
 // Configure Nodemailer Transporter
 // IMPORTANT: You need to set EMAIL_USER and EMAIL_PASS in your .env file
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // or your preferred service
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
+    connectionTimeout: 10000, // 10 seconds timeout for connecting
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
 });
 
 function normalizeRegistrationType(value) {
@@ -463,6 +473,7 @@ exports.sendRegisterOtp = async (req, res) => {
         }
 
         // Generate 6-digit OTP
+        console.log(`[sendRegisterOtp] Generating OTP for ${normalizedEmail}...`);
         const otp = otpGenerator.generate(6, {
             upperCaseAlphabets: false,
             specialChars: false,
@@ -470,6 +481,7 @@ exports.sendRegisterOtp = async (req, res) => {
         });
 
         // Save/Update OTP in 'otps' table
+        console.log(`[sendRegisterOtp] Saving OTP to Supabase for ${normalizedEmail}...`);
         await supabaseAdmin.from('otps').delete().eq('email', normalizedEmail);
 
         const { error: dbError } = await supabaseAdmin
@@ -481,6 +493,7 @@ exports.sendRegisterOtp = async (req, res) => {
             return res.status(500).json({ message: 'Failed to save OTP' });
         }
 
+        console.log(`[sendRegisterOtp] Preparing to send email via Nodemailer to ${normalizedEmail}...`);
         // Send Email
         const mailOptions = {
             from: process.env.EMAIL_USER,
