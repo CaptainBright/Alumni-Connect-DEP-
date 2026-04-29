@@ -121,11 +121,11 @@ export default function Dashboard() {
           } else {
             // Fallback mock events
             setEventSchedule([
-              { id: 1, title: 'Alumni Mentorship Webinar', date: 'Mar 20, 2026', time: '7:00 PM IST' },
-              { id: 2, title: 'Startup Networking Circle', date: 'Mar 25, 2026', time: '6:30 PM IST' },
-              { id: 3, title: 'Annual Alumni Meet Planning', date: 'Apr 2, 2026', time: '5:00 PM IST' },
-              { id: 4, title: 'Mock Interviews Session', date: 'Apr 10, 2026', time: '10:00 AM IST' },
-              { id: 5, title: 'Product Management Masterclass', date: 'Apr 15, 2026', time: '6:00 PM IST' }
+              { id: 1, title: 'Alumni Mentorship Webinar', event_date: '2026-05-20', event_time: '7:00 PM IST' },
+              { id: 2, title: 'Startup Networking Circle', event_date: '2026-05-25', event_time: '6:30 PM IST' },
+              { id: 3, title: 'Annual Alumni Meet Planning', event_date: '2026-06-02', event_time: '5:00 PM IST' },
+              { id: 4, title: 'Mock Interviews Session', event_date: '2026-06-10', event_time: '10:00 AM IST' },
+              { id: 5, title: 'Product Management Masterclass', event_date: '2026-06-15', event_time: '6:00 PM IST' }
             ])
           }
         }
@@ -134,11 +134,11 @@ export default function Dashboard() {
         console.error('Failed to load events:', err)
         if (mounted) {
           setEventSchedule([
-            { id: 1, title: 'Alumni Mentorship Webinar', date: 'Mar 20, 2026', time: '7:00 PM IST' },
-            { id: 2, title: 'Startup Networking Circle', date: 'Mar 25, 2026', time: '6:30 PM IST' },
-            { id: 3, title: 'Annual Alumni Meet Planning', date: 'Apr 2, 2026', time: '5:00 PM IST' },
-            { id: 4, title: 'Mock Interviews Session', date: 'Apr 10, 2026', time: '10:00 AM IST' },
-            { id: 5, title: 'Product Management Masterclass', date: 'Apr 15, 2026', time: '6:00 PM IST' }
+            { id: 1, title: 'Alumni Mentorship Webinar', event_date: '2026-05-20', event_time: '7:00 PM IST' },
+            { id: 2, title: 'Startup Networking Circle', event_date: '2026-05-25', event_time: '6:30 PM IST' },
+            { id: 3, title: 'Annual Alumni Meet Planning', event_date: '2026-06-02', event_time: '5:00 PM IST' },
+            { id: 4, title: 'Mock Interviews Session', event_date: '2026-06-10', event_time: '10:00 AM IST' },
+            { id: 5, title: 'Product Management Masterclass', event_date: '2026-06-15', event_time: '6:00 PM IST' }
           ])
         }
       })

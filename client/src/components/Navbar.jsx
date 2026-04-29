@@ -114,7 +114,7 @@ export default function Navbar() {
     <header className={`navbar ${isHomePublic ? 'fixed' : 'sticky'} top-0 left-0 right-0 z-[1000] ${showScrolledStyle ? 'navbar-scrolled' : ''} ${isHomePublic ? 'navbar-home' : ''}`}>
       <div className="navbar-shell">
         <div className="navbar-logo-section">
-          <Link to={isLoggedIn ? '/dashboard' : '/'} className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <img src="/1.png" alt="IIT Ropar Alumni" className="w-[42px] h-[42px] rounded-full object-cover border border-white/25" />
             <div className="text-white leading-tight">
               <p className="text-[16px] font-semibold">IIT Ropar Alumni</p>
